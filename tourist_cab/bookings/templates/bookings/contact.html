@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Contact Us — TouristCab{% endblock %}
+
+{% block extra_head %}
+<style>
+  .page-hero { background:var(--navy); color:var(--white); padding:4rem 5% 3rem; }
+  .page-hero .eyebrow { color:var(--amber); font-size:.8rem; font-weight:600; letter-spacing:.15em; text-transform:uppercase; margin-bottom:.75rem; }
+  .page-hero h1 { font-family:'Syne',sans-serif; font-size:clamp(2rem,4vw,3rem); font-weight:800; letter-spacing:-.03em; }
+  .page-hero p { color:var(--grey); max-width:500px; line-height:1.7; margin-top:.75rem; }
+
+  .contact-layout { display:grid; grid-template-columns:1fr 1.4fr; gap:3rem; padding:3rem 5%; align-items:start; }
+
+  .contact-method {
+    display:flex; gap:1rem; align-items:flex-start;
+    background:var(--white); border-radius:10px; padding:1.5rem;
+    box-shadow:0 2px 12px rgba(13,27,42,.06); margin-bottom:1rem;
+  }
+  .method-icon { font-size:1.5rem; flex-shrink:0; }
+  .method-icon-wrap {
+    width:48px; height:48px; background:#FFF4E0;
+    border-radius:10px; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .contact-method h4 { font-weight:700; font-size:.9rem; margin-bottom:.25rem; }
+  .contact-method p { font-size:.875rem; color:var(--grey); line-height:1.5; }
+  .contact-method a { color:var(--amber); font-weight:600; font-size:.875rem; text-decoration:none; }
+
+  .hours-grid { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; margin-top:1.5rem; }
+  .hours-row { display:flex; justify-content:space-between; font-size:.85rem; padding:.5rem 0; border-bottom:1px solid #F0F2F5; }
+  .hours-row span:last-child { color:var(--amber); font-weight:600; }
+
+  .form-row { margin-bottom:1rem; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+
+  .success-banner {
+    background:#E6F9EF; border:1.5px solid #34C77B; border-radius:8px;
+    padding:1rem 1.25rem; font-size:.9rem; color:#1A5E38; margin-bottom:1.5rem;
+    display:none;
+  }
+
+  @media(max-width:900px){ .contact-layout{grid-template-columns:1fr;} .hours-grid{grid-template-columns:1fr;} }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <p class="eyebrow">Contact Us</p>
+  <h1>We're here.<br>Reach out anytime.</h1>
+  <p>Questions, feedback, or something went wrong? Our support team responds within 15 minutes during business hours.</p>
+</div>
+
+<div class="contact-layout">
+  <div>
+    <div class="contact-method">
+      <div class="method-icon-wrap"><span class="method-icon">📞</span></div>
+      <div>
+        <h4>Call or WhatsApp</h4>
+        <p>For immediate assistance, call us directly.</p>
+        <a href="tel:+919999999999">+91 99999 99999</a>
+      </div>
+    </div>
+    <div class="contact-method">
+      <div class="method-icon-wrap"><span class="method-icon">📧</span></div>
+      <div>
+        <h4>Email Support</h4>
+        <p>For booking changes, receipts, or complaints.</p>
+        <a href="mailto:support@touristcab.in">support@touristcab.in</a>
+      </div>
+    </div>
+    <div class="contact-method">
+      <div class="method-icon-wrap"><span class="method-icon">📍</span></div>
+      <div>
+        <h4>Office Address</h4>
+        <p>42, Anna Salai, Teynampet<br>Chennai, Tamil Nadu 600018</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1.5rem">
+      <h4 style="font-family:'Syne',sans-serif;font-weight:800;margin-bottom:1rem">Support Hours</h4>
+      <div class="hours-row"><span>Monday – Friday</span><span>6 AM – 11 PM</span></div>
+      <div class="hours-row"><span>Saturday</span><span>7 AM – 10 PM</span></div>
+      <div class="hours-row"><span>Sunday</span><span>8 AM – 9 PM</span></div>
+      <div class="hours-row"><span>Emergency Line</span><span>24 / 7</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="font-family:'Syne',sans-serif;font-weight:800;margin-bottom:.25rem">Send a Message</h3>
+    <p style="font-size:.875rem;color:var(--grey);margin-bottom:1.5rem">We'll get back to you within 24 hours.</p>
+
+    <div class="success-banner" id="success">✓ Message sent! We'll reply within 24 hours.</div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div class="success-banner" style="display:block">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post" id="contactForm">
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="form-row">
+          <label>Full Name</label>
+          <input type="text" name="name" placeholder="Your name" required/>
+        </div>
+        <div class="form-row">
+          <label>Phone Number</label>
+          <input type="tel" name="phone" placeholder="+91 XXXXX XXXXX"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Email Address</label>
+        <input type="email" name="email" placeholder="you@email.com" required/>
+      </div>
+      <div class="form-row">
+        <label>Topic</label>
+        <select name="topic">
+          <option>General Inquiry</option>
+          <option>Booking Issue</option>
+          <option>Driver Complaint</option>
+          <option>Lost Item</option>
+          <option>Billing / Refund</option>
+          <option>Partnership</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Booking ID (if applicable)</label>
+        <input type="text" name="booking_id" placeholder="e.g. TC-20260001"/>
+      </div>
+      <div class="form-row">
+        <label>Message</label>
+        <textarea name="message" rows="5" placeholder="Describe your issue or question in detail..." required></textarea>
+      </div>
+      <button type="submit" class="btn" style="width:100%">Send Message →</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

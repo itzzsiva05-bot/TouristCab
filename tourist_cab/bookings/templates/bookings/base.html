@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}TouristCab{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:   #0D1B2A;
+      --navy2:  #1A2E42;
+      --amber:  #F4A62A;
+      --amber2: #E8920E;
+      --cream:  #F7F3EE;
+      --grey:   #8A9BB0;
+      --white:  #FFFFFF;
+      --radius: 6px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--cream);
+      color: var(--navy);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── NAV ── */
+    nav {
+      background: var(--navy);
+      position: sticky; top: 0; z-index: 100;
+      padding: 0 5%;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .nav-logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 1.3rem;
+      color: var(--white); text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+    .nav-logo span { color: var(--amber); }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      color: var(--grey); text-decoration: none;
+      font-size: 0.875rem; font-weight: 500;
+      transition: color .2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--amber); }
+    .nav-cta {
+      background: var(--amber); color: var(--navy);
+      padding: .5rem 1.25rem; border-radius: var(--radius);
+      font-weight: 600; font-size: .875rem;
+      text-decoration: none; transition: background .2s;
+    }
+    .nav-cta:hover { background: var(--amber2); }
+
+    /* ── MAIN ── */
+    main { flex: 1; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--navy);
+      color: var(--grey);
+      padding: 3rem 5%;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 2rem;
+    }
+    footer h4 {
+      font-family: 'Syne', sans-serif;
+      color: var(--white); font-size: .9rem;
+      margin-bottom: .75rem;
+    }
+    footer ul { list-style: none; }
+    footer ul li { margin-bottom: .4rem; }
+    footer ul li a {
+      color: var(--grey); text-decoration: none;
+      font-size: .85rem; transition: color .2s;
+    }
+    footer ul li a:hover { color: var(--amber); }
+    .footer-copy {
+      grid-column: 1/-1;
+      border-top: 1px solid var(--navy2);
+      padding-top: 1.5rem;
+      font-size: .8rem; text-align: center;
+    }
+
+    /* ── SHARED COMPONENTS ── */
+    .btn {
+      display: inline-block;
+      background: var(--amber); color: var(--navy);
+      padding: .75rem 2rem; border-radius: var(--radius);
+      font-weight: 600; font-size: .95rem;
+      text-decoration: none; border: none; cursor: pointer;
+      transition: background .2s, transform .15s;
+    }
+    .btn:hover { background: var(--amber2); transform: translateY(-1px); }
+    
+    .section { padding: 5rem 5%; }
+    .section-dark { background: var(--navy); color: var(--white); }
+    
+    .card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 2px 20px rgba(13,27,42,.06);
+    }
+
+    label { display: block; font-size: .85rem; font-weight: 600; margin-bottom: .4rem; color: var(--navy); }
+    input, select, textarea {
+      width: 100%; padding: .75rem 1rem;
+      border: 1.5px solid #D8DDE5; border-radius: var(--radius);
+      font-family: 'Inter', sans-serif; font-size: .9rem;
+      background: var(--white); color: var(--navy);
+      transition: border-color .2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none; border-color: var(--amber);
+    }
+
+    @media (max-width: 768px) {
+      footer { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="/">Tourist<span>Cab</span></a>
+  <ul class="nav-links">
+    <li><a href="/">Home</a></li>
+    <li><a href="/book/" class="active">Book a Ride</a></li>
+    <li><a href="/airport/">Airport Taxi</a></li>
+    <li><a href="/outstation/">Outstation</a></li>
+    <li><a href="/rentals/">Rentals</a></li>
+    <li><a href="/contact/">Contact</a></li>
+  </ul>
+  <a class="nav-cta" href="/book/">Book Now</a>
+</nav>
+
+<main>
+  {% block content %}{% endblock %}
+</main>
+
+<footer>
+  <div>
+    <h4>TouristCab</h4>
+    <p style="font-size:.85rem;line-height:1.6">Safe, comfortable rides across the city and beyond. Available 24/7.</p>
+  </div>
+  <div>
+    <h4>Services</h4>
+    <ul>
+      <li><a href="/airport/">Airport Taxi</a></li>
+      <li><a href="/outstation/">Outstation Trips</a></li>
+      <li><a href="/rentals/">Car Rentals</a></li>
+      <li><a href="/driver-partner/">Drive With Us</a></li>
+    </ul>
+  </div>
+  <div>
+    <h4>Company</h4>
+    <ul>
+      <li><a href="/">About</a></li>
+      <li><a href="/contact/">Contact</a></li>
+    </ul>
+  </div>
+  <div class="footer-copy">
+    &copy; 2026 TouristCab. All rights reserved.
+  </div>
+</footer>
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

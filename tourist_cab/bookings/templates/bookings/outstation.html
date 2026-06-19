@@ -1,0 +1,128 @@
+{% extends "bookings/base.html" %}
+{% block title %}Outstation Trips — TouristCab{% endblock %}
+
+{% block extra_head %}
+<style>
+  .page-hero { background:var(--navy); color:var(--white); padding:4rem 5% 3rem; }
+  .page-hero .eyebrow { color:var(--amber); font-size:.8rem; font-weight:600; letter-spacing:.15em; text-transform:uppercase; margin-bottom:.75rem; }
+  .page-hero h1 { font-family:'Syne',sans-serif; font-size:clamp(2rem,4vw,3rem); font-weight:800; letter-spacing:-.03em; }
+  .page-hero p { color:var(--grey); font-size:1rem; max-width:520px; line-height:1.7; margin-top:.75rem; }
+
+  .outstation-layout { display:grid; grid-template-columns:1fr 380px; gap:2.5rem; padding:3rem 5%; align-items:start; }
+
+  .trip-type-toggle { display:flex; gap:1rem; margin-bottom:2rem; }
+  .trip-chip {
+    padding:.6rem 1.5rem; border-radius:20px; cursor:pointer;
+    font-weight:600; font-size:.875rem;
+    border:2px solid #E5E8ED; color:var(--grey);
+    background:transparent; transition:all .2s;
+  }
+  .trip-chip.active { border-color:var(--amber); background:var(--amber); color:var(--navy); }
+
+  .popular-routes { margin-top:2rem; }
+  .popular-routes h3 { font-family:'Syne',sans-serif; font-weight:700; font-size:1.1rem; margin-bottom:1rem; }
+  .route-grid { display:grid; grid-template-columns:1fr 1fr; gap:.75rem; }
+  .route-card {
+    background:var(--white); border-radius:10px; padding:1rem 1.25rem;
+    border:1.5px solid #E5E8ED; cursor:pointer; transition:all .2s;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .route-card:hover { border-color:var(--amber); box-shadow:0 2px 12px rgba(244,166,42,.15); }
+  .route-card .route-name { font-weight:600; font-size:.9rem; }
+  .route-card .route-dist { font-size:.8rem; color:var(--grey); margin-top:.1rem; }
+  .route-card .route-price { font-weight:700; color:var(--amber); font-size:.9rem; }
+
+  .form-row { margin-bottom:1rem; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+
+  @media(max-width:900px){ .outstation-layout{grid-template-columns:1fr;} .route-grid{grid-template-columns:1fr;} }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <p class="eyebrow">Outstation Trips</p>
+  <h1>Go further.<br>Travel better.</h1>
+  <p>One-way or round trips anywhere you want to go. Experienced long-haul drivers, clean cars, transparent pricing.</p>
+</div>
+
+<div class="outstation-layout">
+  <div>
+    <div class="trip-type-toggle">
+      <button class="trip-chip active" onclick="setTrip(this,'one_way')">One Way</button>
+      <button class="trip-chip" onclick="setTrip(this,'round_trip')">Round Trip</button>
+    </div>
+
+    <div class="popular-routes">
+      <h3>Popular Routes from Chennai</h3>
+      <div class="route-grid">
+        <div class="route-card"><div><div class="route-name">Chennai → Pondicherry</div><div class="route-dist">160 km · ~2.5 hrs</div></div><div class="route-price">₹2,100</div></div>
+        <div class="route-card"><div><div class="route-name">Chennai → Bengaluru</div><div class="route-dist">350 km · ~5 hrs</div></div><div class="route-price">₹4,500</div></div>
+        <div class="route-card"><div><div class="route-name">Chennai → Madurai</div><div class="route-dist">460 km · ~7 hrs</div></div><div class="route-price">₹5,800</div></div>
+        <div class="route-card"><div><div class="route-name">Chennai → Ooty</div><div class="route-dist">540 km · ~8 hrs</div></div><div class="route-price">₹6,500</div></div>
+        <div class="route-card"><div><div class="route-name">Chennai → Tirupati</div><div class="route-dist">150 km · ~2.5 hrs</div></div><div class="route-price">₹2,000</div></div>
+        <div class="route-card"><div><div class="route-name">Chennai → Coimbatore</div><div class="route-dist">500 km · ~7.5 hrs</div></div><div class="route-price">₹6,200</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="position:sticky;top:80px">
+    <h3 style="font-family:'Syne',sans-serif;font-weight:800;margin-bottom:1.25rem">Book Outstation</h3>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="trip_type" id="trip_type_val" value="one_way"/>
+      <div class="form-row">
+        <label>From</label>
+        <input type="text" name="from_city" placeholder="Pickup city or address" required/>
+      </div>
+      <div class="form-row">
+        <label>To</label>
+        <input type="text" name="to_city" placeholder="Destination city" required/>
+      </div>
+      <div class="form-grid">
+        <div class="form-row">
+          <label>Departure Date</label>
+          <input type="date" name="departure_date" required/>
+        </div>
+        <div class="form-row" id="return_field">
+          <label>Return Date</label>
+          <input type="date" name="return_date"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Car Type</label>
+        <select name="car_type">
+          <option value="sedan">Sedan — ₹12/km</option>
+          <option value="suv">SUV — ₹18/km</option>
+          <option value="premium">Premium — ₹25/km</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Passengers</label>
+        <select name="passengers">
+          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6+</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Your Name</label>
+        <input type="text" name="name" required/>
+      </div>
+      <div class="form-row">
+        <label>Phone</label>
+        <input type="tel" name="phone" required/>
+      </div>
+      <button type="submit" class="btn" style="width:100%">Get Quote & Book →</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function setTrip(el, val) {
+  document.querySelectorAll('.trip-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('trip_type_val').value = val;
+  document.getElementById('return_field').style.opacity = val === 'round_trip' ? '1' : '0.3';
+}
+document.getElementById('return_field').style.opacity = '0.3';
+</script>
+{% endblock %}

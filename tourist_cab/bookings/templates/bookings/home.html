@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TouristCab – Your Ride, Your Journey</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy:#0A1628; --navy2:#132040; --gold:#F5A623; --gold2:#E8941A;
+      --white:#FFFFFF; --slate:#4A5568; --light:#F7F9FC; --muted:#8898AA; --radius:14px;
+    }
+    html { scroll-behavior: smooth; }
+    body { font-family:'Inter',sans-serif; background:var(--white); color:var(--navy); overflow-x:hidden; }
+
+    /* NAV */
+    nav {
+      position:fixed; top:0; left:0; right:0; z-index:200;
+      display:flex; align-items:center; justify-content:space-between;
+      padding:16px 6%; background:rgba(10,22,40,0.97); backdrop-filter:blur(12px);
+    }
+    .logo { font-family:'Poppins',sans-serif; font-weight:800; font-size:1.5rem; color:var(--white); text-decoration:none; cursor:pointer; }
+    .logo span { color:var(--gold); }
+    .nav-links { display:flex; gap:4px; list-style:none; align-items:center; }
+    .nav-links > li { position:relative; }
+    .nav-links > li > a {
+      color:rgba(255,255,255,0.8); text-decoration:none; font-size:0.88rem; font-weight:500;
+      padding:9px 13px; display:flex; align-items:center; gap:5px; border-radius:8px;
+      cursor:pointer; transition:color 0.2s, background 0.2s; white-space:nowrap;
+    }
+    .nav-links > li > a:hover { color:var(--gold); background:rgba(245,166,35,0.08); }
+    .nav-links > li > a.active { color:var(--gold); }
+    .arrow { font-size:0.55rem; transition:transform 0.2s; display:inline-block; }
+    .nav-links > li.open > a .arrow { transform:rotate(180deg); }
+
+    /* DROPDOWN PANEL */
+    .drop-panel {
+      position:absolute; top:calc(100% + 12px); left:50%;
+      transform:translateX(-50%);
+      background:var(--gold); border-radius:20px;
+      padding:28px 32px; min-width:580px;
+      display:none; box-shadow:0 24px 64px rgba(10,22,40,0.45);
+      z-index:300;
+    }
+    .nav-links > li.open .drop-panel { display:flex; }
+    .drop-inner { display:flex; gap:32px; width:100%; }
+    .drop-col { flex:1; }
+    .drop-title { font-family:'Poppins',sans-serif; font-size:1rem; font-weight:800; color:var(--navy); margin-bottom:16px; }
+    .city-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:2px 8px; }
+    .city-link {
+      color:var(--navy); text-decoration:none; font-size:0.85rem; font-weight:500;
+      padding:6px 10px; border-radius:8px; display:block;
+      transition:background 0.15s; cursor:pointer;
+    }
+    .city-link:hover { background:rgba(10,22,40,0.12); }
+    .explore-btn {
+      display:inline-block; margin-top:14px;
+      background:var(--navy); color:var(--gold);
+      padding:8px 20px; border-radius:50px;
+      font-size:0.8rem; font-weight:700; text-decoration:none; cursor:pointer;
+    }
+    .drop-visual { width:160px; min-width:140px; display:flex; align-items:flex-end; }
+    .drop-visual svg { width:100%; }
+    .simple-list { list-style:none; display:flex; flex-direction:column; gap:2px; }
+    .simple-list a { color:var(--navy); text-decoration:none; font-size:0.9rem; font-weight:500; padding:9px 12px; border-radius:8px; display:block; transition:background 0.15s; white-space:nowrap; cursor:pointer; }
+    .simple-list a:hover { background:rgba(10,22,40,0.12); }
+    .drop-panel.simple { min-width:220px; }
+    .nav-cta {
+      background:var(--gold); color:var(--navy);
+      padding:10px 22px; border-radius:50px;
+      font-weight:700; font-size:0.88rem; text-decoration:none;
+      transition:background 0.2s; margin-left:8px; cursor:pointer;
+    }
+    .nav-cta:hover { background:var(--gold2); }
+
+    /* STATE TABS INSIDE CABS DROPDOWN */
+    .state-tabs { display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
+    .state-tab {
+      padding:5px 10px; border-radius:40px; border:1.5px solid rgba(10,22,40,0.25);
+      font-size:0.8rem; font-weight:600; cursor:pointer; background:transparent;
+      color:var(--navy); transition:all 0.2s; font-family:'Inter',sans-serif;
+    }
+    .state-tab.active { background:var(--navy); border-color:var(--navy); color:var(--gold); }
+    .state-tab:hover:not(.active) { border-color:var(--navy); }
+
+    /* PAGES */
+    .page { display:none; }
+    .page.active { display:block; }
+
+    /* HERO */
+    .hero {
+      min-height:100vh;
+      background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 60%,#1a2f5a 100%);
+      display:flex; align-items:center; padding:120px 6% 80px;
+      position:relative; overflow:hidden;
+    }
+    .hero::before {
+      content:''; position:absolute; inset:0;
+      background:radial-gradient(ellipse 60% 50% at 70% 50%,rgba(245,166,35,0.08) 0%,transparent 70%);
+    }
+    .road-lines { position:absolute; right:0; top:0; bottom:0; width:55%; overflow:hidden; pointer-events:none; }
+    .road-lines::before {
+      content:''; position:absolute; left:50%; top:0; bottom:0; width:4px;
+      background:repeating-linear-gradient(to bottom,var(--gold) 0px,var(--gold) 40px,transparent 40px,transparent 80px);
+      opacity:0.15; animation:roadScroll 1.8s linear infinite;
+    }
+    @keyframes roadScroll { from{transform:translateY(0)} to{transform:translateY(80px)} }
+    .hero-content { position:relative; z-index:2; max-width:580px; }
+    .hero-eyebrow {
+      display:inline-flex; align-items:center; gap:8px;
+      background:rgba(245,166,35,0.15); border:1px solid rgba(245,166,35,0.3);
+      color:var(--gold); padding:6px 16px; border-radius:50px;
+      font-size:0.78rem; font-weight:600; letter-spacing:0.8px; text-transform:uppercase; margin-bottom:24px;
+    }
+    .hero-eyebrow::before { content:'●'; font-size:0.5rem; animation:blink 1.4s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+    .hero h1 { font-family:'Poppins',sans-serif; font-size:clamp(2.4rem,5vw,3.8rem); font-weight:800; line-height:1.1; color:var(--white); margin-bottom:20px; }
+    .hero h1 em { font-style:normal; color:var(--gold); }
+    .hero p { color:rgba(255,255,255,0.65); font-size:1.05rem; line-height:1.7; margin-bottom:40px; max-width:460px; }
+    .hero-actions { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:56px; }
+    .btn-primary {
+      background:var(--gold); color:var(--navy); padding:15px 32px; border-radius:50px;
+      font-weight:700; font-size:1rem; text-decoration:none; display:inline-flex; align-items:center; gap:8px;
+      transition:background 0.2s,transform 0.15s,box-shadow 0.2s; box-shadow:0 8px 24px rgba(245,166,35,0.35); cursor:pointer; border:none; font-family:'Inter',sans-serif;
+    }
+    .btn-primary:hover { background:var(--gold2); transform:translateY(-2px); }
+    .btn-secondary {
+      background:transparent; color:var(--white); padding:15px 32px; border-radius:50px;
+      font-weight:600; font-size:1rem; text-decoration:none; border:1.5px solid rgba(255,255,255,0.3);
+      transition:border-color 0.2s,background 0.2s; cursor:pointer; font-family:'Inter',sans-serif;
+    }
+    .btn-secondary:hover { border-color:var(--gold); background:rgba(245,166,35,0.08); }
+    .hero-stats { display:flex; gap:36px; }
+    .stat-num { font-family:'Poppins',sans-serif; font-size:1.8rem; font-weight:800; color:var(--white); line-height:1; }
+    .stat-num span { color:var(--gold); }
+    .stat-label { font-size:0.78rem; color:var(--muted); margin-top:4px; text-transform:uppercase; letter-spacing:0.6px; }
+    .hero-visual { position:absolute; right:6%; bottom:0; width:clamp(280px,40vw,520px); z-index:2; }
+    .taxi-svg { width:100%; filter:drop-shadow(0 20px 60px rgba(245,166,35,0.2)); }
+
+    /* BOOKING BAR */
+    .booking-bar { background:var(--white); box-shadow:0 -4px 40px rgba(10,22,40,0.12); padding:28px 6%; }
+    .booking-inner { max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:16px; align-items:end; }
+    .field-group label { display:block; font-size:0.75rem; font-weight:600; color:var(--slate); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:8px; }
+    .field-group input, .field-group select {
+      width:100%; padding:12px 16px; border:1.5px solid #E2E8F0; border-radius:var(--radius);
+      font-family:'Inter',sans-serif; font-size:0.95rem; color:var(--navy); outline:none; transition:border-color 0.2s; background:var(--white);
+    }
+    .field-group input:focus,.field-group select:focus { border-color:var(--gold); }
+    .book-btn {
+      background:var(--gold); color:var(--navy); padding:12px 28px; border-radius:var(--radius);
+      font-weight:700; font-size:1rem; border:none; cursor:pointer; white-space:nowrap;
+      transition:background 0.2s,transform 0.15s; font-family:'Inter',sans-serif;
+    }
+    .book-btn:hover { background:var(--gold2); transform:translateY(-1px); }
+
+    /* SECTIONS */
+    .section { padding:80px 6%; }
+    .section-inner { max-width:1100px; margin:0 auto; }
+    .section-tag { font-size:0.75rem; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:1.2px; margin-bottom:12px; }
+    .section-title { font-family:'Poppins',sans-serif; font-size:clamp(1.8rem,3vw,2.5rem); font-weight:800; color:var(--navy); line-height:1.2; margin-bottom:14px; }
+    .section-sub { color:var(--slate); font-size:1rem; line-height:1.7; max-width:500px; margin-bottom:48px; }
+    .services-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:24px; }
+    .service-card {
+      background:var(--light); border-radius:20px; padding:32px 26px;
+      border:1.5px solid transparent; transition:border-color 0.25s,box-shadow 0.25s,transform 0.2s,background 0.25s;
+      cursor:pointer; text-decoration:none; display:block;
+    }
+    .service-card:hover { border-color:var(--gold); box-shadow:0 12px 40px rgba(245,166,35,0.15); transform:translateY(-6px); background:var(--white); }
+    .service-card:hover .service-icon { background:var(--gold); }
+    .service-icon { width:52px; height:52px; border-radius:14px; background:var(--navy); display:flex; align-items:center; justify-content:center; font-size:1.5rem; margin-bottom:18px; }
+    .service-card h3 { font-family:'Poppins',sans-serif; font-size:1.05rem; font-weight:700; color:var(--navy); margin-bottom:8px; }
+    .service-card p { font-size:0.88rem; color:var(--slate); line-height:1.6; }
+
+    /* HOW IT WORKS */
+    .how-section { background:var(--navy); padding:80px 6%; }
+    .how-section .section-title { color:var(--white); }
+    .how-section .section-sub { color:rgba(255,255,255,0.55); }
+    .how-section .section-tag { color:var(--gold); }
+    .steps-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:40px; }
+    .step { text-align:center; }
+    .step-num {
+      width:60px; height:60px; border-radius:50%;
+      background:rgba(245,166,35,0.12); border:2px solid rgba(245,166,35,0.3);
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Poppins',sans-serif; font-size:1.3rem; font-weight:800; color:var(--gold); margin:0 auto 18px;
+    }
+    .step h3 { font-family:'Poppins',sans-serif; font-size:1rem; font-weight:700; color:var(--white); margin-bottom:8px; }
+    .step p { font-size:0.88rem; color:rgba(255,255,255,0.5); line-height:1.6; }
+
+    /* WHY US */
+    .why-section { background:var(--light); padding:80px 6%; }
+    .why-grid { display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:center; max-width:1100px; margin:0 auto; }
+    .why-list { list-style:none; display:flex; flex-direction:column; gap:22px; }
+    .why-item { display:flex; gap:14px; align-items:flex-start; }
+    .why-check { width:34px; height:34px; min-width:34px; border-radius:10px; background:var(--gold); display:flex; align-items:center; justify-content:center; font-size:0.95rem; margin-top:2px; }
+    .why-item h4 { font-family:'Poppins',sans-serif; font-size:1rem; font-weight:700; color:var(--navy); margin-bottom:4px; }
+    .why-item p { font-size:0.88rem; color:var(--slate); line-height:1.6; }
+    .why-visual { background:var(--navy); border-radius:24px; padding:44px; text-align:center; display:flex; flex-direction:column; gap:24px; }
+    .rating-big { font-family:'Poppins',sans-serif; font-size:3.8rem; font-weight:800; color:var(--gold); line-height:1; }
+    .stars { font-size:1.3rem; letter-spacing:4px; color:var(--gold); }
+    .rating-sub { color:rgba(255,255,255,0.5); font-size:0.85rem; }
+    .metric-row { display:flex; justify-content:space-around; border-top:1px solid rgba(255,255,255,0.08); padding-top:24px; }
+    .metric { text-align:center; }
+    .metric-val { font-family:'Poppins',sans-serif; font-size:1.5rem; font-weight:800; color:var(--white); }
+    .metric-val span { color:var(--gold); }
+    .metric-lbl { font-size:0.75rem; color:rgba(255,255,255,0.4); margin-top:4px; }
+
+    /* CTA */
+    .cta-section { background:linear-gradient(135deg,#0A1628 0%,#1a2f5a 100%); padding:80px 6%; text-align:center; }
+    .cta-section h2 { font-family:'Poppins',sans-serif; font-size:clamp(1.8rem,4vw,3rem); font-weight:800; color:var(--white); margin-bottom:14px; }
+    .cta-section h2 span { color:var(--gold); }
+    .cta-section p { color:rgba(255,255,255,0.55); font-size:1rem; margin-bottom:36px; }
+    .cta-buttons { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+
+    /* FOOTER */
+    footer { background:#060f1e; padding:44px 6% 28px; border-top:1px solid rgba(255,255,255,0.06); }
+    .footer-inner { max-width:1100px; margin:0 auto; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:20px; }
+    .footer-links { display:flex; gap:28px; list-style:none; }
+    .footer-links a { color:rgba(255,255,255,0.4); text-decoration:none; font-size:0.85rem; transition:color 0.2s; cursor:pointer; }
+    .footer-links a:hover { color:var(--gold); }
+    .footer-copy { color:rgba(255,255,255,0.25); font-size:0.8rem; }
+
+    /* CITY PAGE */
+    .city-hero {
+      padding:120px 6% 60px;
+      background:linear-gradient(135deg,var(--navy) 0%,#1a2f5a 100%);
+      position:relative; overflow:hidden;
+    }
+    .city-hero::before {
+      content:''; position:absolute; inset:0;
+      background:radial-gradient(ellipse 50% 60% at 80% 50%,rgba(245,166,35,0.1) 0%,transparent 70%);
+    }
+    .city-hero-inner { max-width:1100px; margin:0 auto; position:relative; z-index:2; }
+    .back-btn {
+      display:inline-flex; align-items:center; gap:8px;
+      color:rgba(255,255,255,0.6); font-size:0.88rem; font-weight:500; cursor:pointer;
+      margin-bottom:24px; transition:color 0.2s; background:none; border:none; font-family:'Inter',sans-serif;
+    }
+    .back-btn:hover { color:var(--gold); }
+    .city-badge {
+      display:inline-flex; align-items:center; gap:8px;
+      background:rgba(245,166,35,0.15); border:1px solid rgba(245,166,35,0.3);
+      color:var(--gold); padding:5px 14px; border-radius:50px;
+      font-size:0.75rem; font-weight:600; letter-spacing:0.8px; text-transform:uppercase; margin-bottom:16px;
+    }
+    .city-hero h1 { font-family:'Poppins',sans-serif; font-size:clamp(2rem,4vw,3.2rem); font-weight:800; color:var(--white); margin-bottom:14px; }
+    .city-hero h1 span { color:var(--gold); }
+    .city-hero p { color:rgba(255,255,255,0.6); font-size:1rem; line-height:1.7; max-width:520px; margin-bottom:32px; }
+    .city-stats { display:flex; gap:32px; }
+    .city-stat-num { font-family:'Poppins',sans-serif; font-size:1.6rem; font-weight:800; color:var(--white); }
+    .city-stat-num span { color:var(--gold); }
+    .city-stat-label { font-size:0.75rem; color:var(--muted); margin-top:3px; text-transform:uppercase; letter-spacing:0.5px; }
+
+    /* PACKAGES */
+    .packages-section { padding:72px 6%; background:var(--white); }
+    .packages-inner { max-width:1100px; margin:0 auto; }
+    .packages-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:28px; }
+    .pkg-card {
+      border-radius:20px; overflow:hidden;
+      border:1.5px solid #E8EDF3;
+      transition:transform 0.25s,box-shadow 0.25s,border-color 0.25s;
+      background:var(--white); cursor:pointer;
+    }
+    .pkg-card:hover { transform:translateY(-6px); box-shadow:0 16px 48px rgba(10,22,40,0.12); border-color:var(--gold); }
+    .pkg-img {
+      width:100%; height:200px; object-fit:cover;
+      background:linear-gradient(135deg,#1a2f5a,#0A1628);
+      display:flex; align-items:center; justify-content:center;
+      font-size:4rem; position:relative; overflow:hidden;
+    }
+    .pkg-img-emoji { font-size:4rem; z-index:2; position:relative; }
+    .pkg-img::before {
+      content:''; position:absolute; inset:0;
+      background:linear-gradient(135deg,var(--navy2),#1a3a6a);
+    }
+    /* Image carousel inside pkg-img */
+    .pkg-carousel { position:absolute; inset:0; }
+    .pkg-slide {
+      position:absolute; inset:0; opacity:0; transition:opacity 0.6s ease;
+      background-size:cover; background-position:center;
+    }
+    .pkg-slide.active { opacity:1; }
+    .pkg-slide::after {
+      content:''; position:absolute; inset:0;
+      background:linear-gradient(180deg,rgba(10,22,40,0.05) 0%,rgba(10,22,40,0.55) 100%);
+    }
+    .pkg-slide-label {
+      position:absolute; left:14px; bottom:10px; z-index:4;
+      color:var(--white); font-size:0.74rem; font-weight:600;
+      text-shadow:0 1px 4px rgba(0,0,0,0.6);
+    }
+    .pkg-dots { position:absolute; right:12px; bottom:10px; z-index:4; display:flex; gap:5px; }
+    .pkg-dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,0.45); transition:background 0.3s,transform 0.3s; }
+    .pkg-dot.active { background:var(--gold); transform:scale(1.25); }
+    /* Pickup chip */
+    .pkg-pickup-chip {
+      display:inline-flex; align-items:center; gap:5px;
+      background:rgba(245,166,35,0.12); color:var(--gold2);
+      border:1px solid rgba(245,166,35,0.35);
+      padding:4px 11px; border-radius:50px;
+      font-size:0.74rem; font-weight:700; margin-bottom:14px;
+    }
+    .pkg-badge {
+      position:absolute; top:14px; left:14px;
+      background:var(--gold); color:var(--navy);
+      padding:4px 12px; border-radius:50px;
+      font-size:0.72rem; font-weight:700; z-index:3;
+    }
+    .pkg-body { padding:22px; }
+    .pkg-title { font-family:'Poppins',sans-serif; font-size:1.05rem; font-weight:700; color:var(--navy); margin-bottom:8px; }
+    .pkg-desc { font-size:0.85rem; color:var(--slate); line-height:1.6; margin-bottom:16px; }
+    .pkg-places { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:18px; }
+    .pkg-place-tag {
+      background:var(--light); color:var(--slate);
+      padding:4px 10px; border-radius:50px;
+      font-size:0.75rem; font-weight:500;
+    }
+    .pkg-footer { display:flex; align-items:center; justify-content:space-between; border-top:1px solid #E8EDF3; padding-top:16px; }
+    .pkg-price { font-family:'Poppins',sans-serif; }
+    .pkg-price-label { font-size:0.7rem; color:var(--muted); }
+    .pkg-price-val { font-size:1.3rem; font-weight:800; color:var(--navy); }
+    .pkg-price-val span { font-size:0.75rem; font-weight:500; color:var(--muted); }
+    .pkg-meta { display:flex; gap:12px; }
+    .pkg-meta-item { font-size:0.75rem; color:var(--slate); display:flex; align-items:center; gap:4px; }
+    .pkg-book-btn {
+      background:var(--gold); color:var(--navy);
+      padding:8px 20px; border-radius:50px;
+      font-weight:700; font-size:0.85rem; border:none; cursor:pointer;
+      font-family:'Inter',sans-serif; transition:background 0.2s,transform 0.15s;
+    }
+    .pkg-book-btn:hover { background:var(--gold2); transform:translateY(-1px); }
+
+    /* ── BOOKING MODAL ── */
+    .modal-overlay {
+      position:fixed; inset:0; background:rgba(10,22,40,0.85);
+      z-index:1000; display:flex; align-items:center; justify-content:center;
+      padding:20px; opacity:0; pointer-events:none; transition:opacity 0.25s;
+    }
+    .modal-overlay.open { opacity:1; pointer-events:all; }
+    .modal-box {
+      background:var(--white); border-radius:24px; width:100%; max-width:560px;
+      max-height:90vh; overflow-y:auto;
+      transform:translateY(30px) scale(0.97); transition:transform 0.25s;
+    }
+    .modal-overlay.open .modal-box { transform:translateY(0) scale(1); }
+    .modal-header {
+      background:linear-gradient(135deg,var(--navy),var(--navy2));
+      padding:28px 32px 24px; border-radius:24px 24px 0 0;
+      display:flex; justify-content:space-between; align-items:flex-start;
+    }
+    .modal-title { font-family:'Poppins',sans-serif; font-size:1.2rem; font-weight:800; color:var(--white); }
+    .modal-subtitle { font-size:0.82rem; color:rgba(255,255,255,0.5); margin-top:4px; }
+    .modal-close {
+      background:rgba(255,255,255,0.12); border:none; cursor:pointer;
+      width:34px; height:34px; border-radius:50%; color:var(--white);
+      font-size:1.1rem; display:flex; align-items:center; justify-content:center;
+      transition:background 0.2s; flex-shrink:0;
+    }
+    .modal-close:hover { background:rgba(255,255,255,0.22); }
+    .modal-body { padding:28px 32px; }
+
+    /* Trip type tabs inside modal */
+    .modal-tabs { display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap; }
+    .modal-tab {
+      padding:8px 18px; border-radius:50px; border:1.5px solid #E2E8F0;
+      font-size:0.82rem; font-weight:600; cursor:pointer; background:var(--white);
+      color:var(--slate); transition:all 0.2s; font-family:'Inter',sans-serif;
+    }
+    .modal-tab.active { background:var(--gold); border-color:var(--gold); color:var(--navy); }
+    .modal-tab:hover:not(.active) { border-color:var(--gold); color:var(--navy); }
+
+    /* Form rows */
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+    .form-row.single { grid-template-columns:1fr; }
+    .form-group label {
+      display:block; font-size:0.75rem; font-weight:600; color:var(--slate);
+      text-transform:uppercase; letter-spacing:0.6px; margin-bottom:7px;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width:100%; padding:11px 14px; border:1.5px solid #E2E8F0; border-radius:10px;
+      font-family:'Inter',sans-serif; font-size:0.92rem; color:var(--navy); outline:none;
+      transition:border-color 0.2s; background:var(--white);
+    }
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus { border-color:var(--gold); }
+    .form-group textarea { resize:vertical; min-height:80px; }
+
+    /* Oneway fare accordion */
+    .fare-section { margin-top:20px; }
+    .fare-title { font-family:'Poppins',sans-serif; font-size:1rem; font-weight:700; color:var(--navy); margin-bottom:14px; }
+    .accordion-item { border:1.5px solid #E2E8F0; border-radius:12px; margin-bottom:8px; overflow:hidden; }
+    .accordion-head {
+      padding:14px 18px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;
+      font-weight:600; font-size:0.9rem; color:var(--navy); background:var(--light);
+      transition:background 0.2s;
+    }
+    .accordion-head:hover { background:#edf0f4; }
+    .accordion-head .acc-arrow { transition:transform 0.2s; font-size:0.7rem; }
+    .accordion-head.open .acc-arrow { transform:rotate(180deg); }
+    .accordion-body { display:none; padding:16px 18px; background:var(--white); }
+    .accordion-body.open { display:block; }
+    .fare-table { width:100%; border-collapse:collapse; font-size:0.82rem; }
+    .fare-table th { background:var(--navy); color:var(--white); padding:8px 12px; text-align:left; font-weight:600; }
+    .fare-table td { padding:8px 12px; border-bottom:1px solid #f0f2f5; color:var(--slate); }
+    .fare-table tr:last-child td { border-bottom:none; }
+    .fare-table tr:hover td { background:#f7f9fc; }
+
+    /* Hourly rental table */
+    .hourly-controls { display:flex; gap:12px; margin-bottom:18px; flex-wrap:wrap; }
+    .hourly-table-wrap { overflow-x:auto; border-radius:12px; border:1.5px solid #E2E8F0; }
+    .hourly-table { width:100%; border-collapse:collapse; font-size:0.82rem; min-width:480px; }
+    .hourly-table th { background:var(--navy); color:var(--white); padding:9px 12px; text-align:left; font-weight:600; }
+    .hourly-table td { padding:8px 12px; border-bottom:1px solid #f0f2f5; color:var(--slate); }
+    .hourly-table tr:last-child td { border-bottom:none; }
+    .hourly-table tr:hover td { background:#f7f9fc; }
+    .highlight-price { font-weight:700; color:var(--navy); }
+
+    /* Bulk booking */
+    .bulk-info { background:var(--light); border-radius:14px; padding:20px; margin-bottom:20px; }
+    .bulk-info p { font-size:0.88rem; color:var(--slate); line-height:1.65; }
+
+    /* Submit btn */
+    .modal-submit {
+      width:100%; padding:14px; background:var(--gold); color:var(--navy);
+      border:none; border-radius:12px; font-weight:700; font-size:1rem;
+      cursor:pointer; font-family:'Inter',sans-serif; margin-top:20px;
+      transition:background 0.2s,transform 0.15s;
+    }
+    .modal-submit:hover { background:var(--gold2); transform:translateY(-1px); }
+
+    /* Success screen */
+    .success-screen { text-align:center; padding:40px 20px; display:none; }
+    .success-icon { font-size:3.5rem; margin-bottom:16px; }
+    .success-screen h3 { font-family:'Poppins',sans-serif; font-size:1.4rem; font-weight:800; color:var(--navy); margin-bottom:10px; }
+    .success-screen p { color:var(--slate); font-size:0.92rem; line-height:1.6; margin-bottom:24px; }
+    .success-ref { display:inline-block; background:var(--light); border-radius:10px; padding:10px 24px; font-weight:700; font-size:1rem; color:var(--navy); margin-bottom:24px; letter-spacing:1px; }
+
+    /* BOOK A TRIP PAGE */
+    .trip-page { padding:120px 6% 60px; min-height:100vh; }
+    .trip-page-inner { max-width:1100px; margin:0 auto; }
+    .trip-hero-band {
+      background:linear-gradient(135deg,var(--navy),var(--navy2));
+      border-radius:24px; padding:48px; margin-bottom:48px; position:relative; overflow:hidden;
+    }
+    .trip-hero-band::before {
+      content:''; position:absolute; right:-40px; top:-40px;
+      width:200px; height:200px; border-radius:50%;
+      background:rgba(245,166,35,0.08);
+    }
+    .trip-hero-band h1 { font-family:'Poppins',sans-serif; font-size:2rem; font-weight:800; color:var(--white); margin-bottom:10px; }
+    .trip-hero-band h1 span { color:var(--gold); }
+    .trip-hero-band p { color:rgba(255,255,255,0.55); font-size:0.95rem; }
+
+    .trip-tabs { display:flex; gap:12px; margin-bottom:32px; flex-wrap:wrap; }
+    .trip-tab {
+      padding:11px 24px; border-radius:50px; border:1.5px solid #E2E8F0;
+      font-size:0.9rem; font-weight:600; cursor:pointer; background:var(--white);
+      color:var(--slate); transition:all 0.2s; font-family:'Inter',sans-serif;
+    }
+    .trip-tab.active { background:var(--gold); border-color:var(--gold); color:var(--navy); }
+    .trip-tab:hover:not(.active) { border-color:var(--gold); color:var(--navy); }
+
+    .trip-content { display:none; }
+    .trip-content.active { display:block; }
+
+    .trip-layout { display:grid; grid-template-columns:1fr 380px; gap:32px; align-items:start; }
+   
+    .trip-sidebar {
+      background:var(--white); border:1.5px solid #E2E8F0; border-radius:20px;
+      padding:28px; position:sticky; top:100px;
+    }
+    .trip-sidebar h3 { font-family:'Poppins',sans-serif; font-size:1rem; font-weight:700; color:var(--navy); margin-bottom:20px; }
+
+    /* Call button */
+    .call-now-bar {
+      background:linear-gradient(135deg,#0A1628,#1a2f5a); border-radius:16px;
+      padding:20px 24px; display:flex; align-items:center; gap:16px; margin-bottom:24px;
+    }
+    .call-icon { font-size:1.6rem; }
+    .call-info { flex:1; }
+    .call-info p { font-size:0.78rem; color:rgba(255,255,255,0.5); }
+    .call-info strong { font-size:1.1rem; color:var(--white); font-family:'Poppins',sans-serif; }
+    .call-btn-link {
+      background:var(--gold); color:var(--navy); padding:10px 20px; border-radius:50px;
+      font-weight:700; font-size:0.85rem; text-decoration:none; white-space:nowrap;
+      transition:background 0.2s;
+    }
+    .call-btn-link:hover { background:var(--gold2); }
+
+    @media(max-width:900px){
+      .hero-visual{display:none}
+      .booking-inner{grid-template-columns:1fr 1fr}
+      .book-btn{grid-column:span 2}
+      .why-grid{grid-template-columns:1fr}
+      .drop-panel{min-width:320px}
+      .city-grid{grid-template-columns:1fr 1fr}
+      .trip-layout{grid-template-columns:1fr}
+      .form-row{grid-template-columns:1fr}
+    }
+    @media(max-width:620px){
+      nav .nav-links{display:none}
+      .booking-inner{grid-template-columns:1fr}
+      .book-btn{grid-column:auto}
+      .hero-stats,.city-stats{gap:20px}
+      .footer-inner{flex-direction:column;align-items:flex-start}
+      .modal-body{padding:20px}
+      .modal-header{padding:22px 20px}
+    }
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="logo" onclick="showHome()">Tourist<span>Cab</span></a>
+  <ul class="nav-links" id="navLinks">
+    <li id="nav-services">
+      <a onclick="toggleDrop('nav-services')">Services <span class="arrow">▼</span></a>
+      <div class="drop-panel simple">
+        <ul class="simple-list">
+          <li><a onclick="closeAllDrops();showHome()">🚕 City Rides</a></li>
+          <li><a onclick="closeAllDrops();showHome()">✈️ Airport Transfer</a></li>
+          <li><a onclick="closeAllDrops();showHome()">🗺️ Tourist Packages</a></li>
+          <li><a onclick="closeAllDrops();showHome()">🚐 Outstation Trips</a></li>
+        </ul>
+      </div>
+    </li>
+    <li id="nav-cabs">
+      <a onclick="toggleDrop('nav-cabs')">Cabs <span class="arrow">▼</span></a>
+      <div class="drop-panel">
+        <div class="drop-inner">
+          <div class="drop-col">
+            <div class="drop-title">Cities</div>
+            <div class="state-tabs" id="state-tabs"></div>
+            <div class="city-grid" id="state-city-grid"></div>
+            <span class="explore-btn" onclick="closeAllDrops()">Explore all Cities</span>
+          </div>
+          <div class="drop-visual">
+            <svg viewBox="0 0 160 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="8" y="58" width="144" height="36" rx="7" fill="#0A1628"/>
+              <path d="M35 58 L48 34 L112 34 L125 58Z" fill="#0A1628"/>
+              <rect x="50" y="39" width="26" height="16" rx="4" fill="#a8d8f0" opacity="0.9"/>
+              <rect x="83" y="39" width="28" height="16" rx="4" fill="#a8d8f0" opacity="0.9"/>
+              <circle cx="44" cy="94" r="14" fill="#1a2440"/><circle cx="44" cy="94" r="8" fill="#2d3a5a"/><circle cx="44" cy="94" r="3.5" fill="#F5A623"/>
+              <circle cx="116" cy="94" r="14" fill="#1a2440"/><circle cx="116" cy="94" r="8" fill="#2d3a5a"/><circle cx="116" cy="94" r="3.5" fill="#F5A623"/>
+              <rect x="55" y="28" width="50" height="12" rx="3.5" fill="#F5A623"/>
+              <text x="80" y="38" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="800" font-size="8" fill="#0A1628">TAXI</text>
+              <path d="M0 100 Q80 88 160 100 L160 110 L0 110Z" fill="#F5A623" opacity="0.25"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </li>
+    <li id="nav-bike">
+      <a onclick="toggleDrop('nav-bike')">Bike Taxi <span class="arrow">▼</span></a>
+      <div class="drop-panel">
+        <div class="drop-inner">
+          <div class="drop-col">
+            <div class="drop-title">Bike Taxi</div>
+            <div class="state-tabs" id="bike-state-tabs"></div>
+            <div class="city-grid" id="bike-state-city-grid"></div>
+            <span class="explore-btn" onclick="closeAllDrops()">Explore all</span>
+          </div>
+          <div class="drop-visual">
+            <svg viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="36" cy="90" r="22" stroke="#0A1628" stroke-width="5" fill="none"/>
+              <circle cx="36" cy="90" r="8" fill="#0A1628"/>
+              <circle cx="124" cy="90" r="22" stroke="#0A1628" stroke-width="5" fill="none"/>
+              <circle cx="124" cy="90" r="8" fill="#0A1628"/>
+              <path d="M36 90 L80 50 L124 90" stroke="#0A1628" stroke-width="4.5" fill="none" stroke-linecap="round"/>
+              <path d="M80 50 L98 90" stroke="#0A1628" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+              <path d="M80 50 L62 50 L36 90" stroke="#0A1628" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+              <rect x="70" y="45" width="22" height="5" rx="2.5" fill="#0A1628"/>
+              <circle cx="91" cy="32" r="10" fill="#0A1628"/>
+              <path d="M84 30 Q91 20 98 30" fill="#F5A623"/>
+              <path d="M0 104 Q80 92 160 104 L160 120 L0 120Z" fill="#F5A623" opacity="0.25"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </li>
+    <li id="nav-book">
+      <a onclick="toggleDrop('nav-book')">Book a Trip <span class="arrow">▼</span></a>
+      <div class="drop-panel simple" style="min-width:260px;">
+        <div style="font-family:'Poppins',sans-serif;font-size:1rem;font-weight:800;color:var(--navy);margin-bottom:14px;padding:0 4px;">Book a Trip</div>
+        <ul class="simple-list">
+          <li><a onclick="closeAllDrops();showTripPage('oneway')">🛣️ Oneway Trip</a></li>
+          <li><a onclick="closeAllDrops();showTripPage('round')">🔄 Round Trip</a></li>
+          <li><a onclick="closeAllDrops();showTripPage('hourly')">⏱️ Hourly Rental</a></li>
+          <li><a onclick="closeAllDrops();showTripPage('bulk')">📦 Bulk Booking</a></li>
+          <li><a onclick="closeAllDrops();openBookingModal({title:'Airport Taxi Booking',type:'Airport Taxi'})">✈️ Airport Taxi</a></li>
+        </ul>
+        <span class="explore-btn" style="margin-top:12px;display:inline-block;" onclick="closeAllDrops();showTripPage('oneway')">Explore all trips</span>
+      </div>
+    </li>
+    <li><a onclick="closeAllDrops();document.getElementById('how-section')&&document.getElementById('how-section').scrollIntoView({behavior:'smooth'})">How It Works</a></li>
+    <li><a onclick="closeAllDrops();openBookingModal({title:'Contact Us',type:'General'})">Contact</a></li>
+  </ul>
+  <a href="{%url 'book_ride'%}"  class="nav-cta" onclick="closeAllDrops();openBookingModal({title:'Book a Ride',type:'General'})">Book a Ride</a>
+</nav>
+
+<!-- ═══ HOME PAGE ═══ -->
+<div id="page-home" class="page active">
+  <section class="hero">
+    <div class="road-lines"></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">Available 24/7 across India</div>
+      <h1>Travel Smarter,<br/>Arrive <em>Comfortably</em></h1>
+      <p>Premium cab service built for tourists and locals alike. Safe drivers, transparent fares, seamless booking — wherever your journey takes you.</p>
+      <div class="hero-actions">
+        <button class="btn-primary" onclick="document.getElementById('book-bar').scrollIntoView({behavior:'smooth'})">🚕 Book Your Ride</button>
+        <button class="btn-secondary" onclick="document.getElementById('how-section').scrollIntoView({behavior:'smooth'})">See How It Works</button>
+      </div>
+      <div class="hero-stats">
+        <div><div class="stat-num">50<span>K+</span></div><div class="stat-label">Happy Riders</div></div>
+        <div><div class="stat-num">200<span>+</span></div><div class="stat-label">Expert Drivers</div></div>
+        <div><div class="stat-num">4.9<span>★</span></div><div class="stat-label">Avg. Rating</div></div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <svg class="taxi-svg" viewBox="0 0 520 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="0" y="260" width="520" height="60" fill="#1a2440"/>
+        <rect x="0" y="275" width="520" height="3" fill="#2d3a5a"/>
+        <rect x="40" y="285" width="60" height="6" rx="3" fill="rgba(245,166,35,0.3)"/>
+        <rect x="160" y="285" width="60" height="6" rx="3" fill="rgba(245,166,35,0.3)"/>
+        <rect x="280" y="285" width="60" height="6" rx="3" fill="rgba(245,166,35,0.3)"/>
+        <rect x="400" y="285" width="60" height="6" rx="3" fill="rgba(245,166,35,0.3)"/>
+        <rect x="80" y="195" width="360" height="70" rx="12" fill="#F5A623"/>
+        <path d="M160 195 L185 140 L335 140 L360 195Z" fill="#F5A623"/>
+        <rect x="215" y="120" width="90" height="28" rx="6" fill="#0A1628"/>
+        <text x="260" y="139" text-anchor="middle" font-family="Poppins,sans-serif" font-weight="800" font-size="13" fill="#F5A623">TAXI</text>
+        <rect x="195" y="150" width="55" height="38" rx="6" fill="#a8d8f0" opacity="0.9"/>
+        <rect x="270" y="150" width="65" height="38" rx="6" fill="#a8d8f0" opacity="0.9"/>
+        <circle cx="160" cy="265" r="32" fill="#0A1628"/><circle cx="160" cy="265" r="20" fill="#2d3a5a"/><circle cx="160" cy="265" r="8" fill="#F5A623"/>
+        <circle cx="360" cy="265" r="32" fill="#0A1628"/><circle cx="360" cy="265" r="20" fill="#2d3a5a"/><circle cx="360" cy="265" r="8" fill="#F5A623"/>
+        <ellipse cx="435" cy="218" rx="14" ry="10" fill="#fff9e0" opacity="0.95"/>
+        <rect x="82" y="208" width="12" height="18" rx="4" fill="#ff5252"/>
+      </svg>
+    </div>
+  </section>
+
+  <div class="booking-bar" id="book-bar">
+    <div class="booking-inner">
+      <div class="field-group"><label>📍 Pickup Location</label><input type="text" id="bar-pickup" placeholder="Enter pickup address"/></div>
+      <div class="field-group"><label>🏁 Drop Location</label><input type="text" id="bar-drop" placeholder="Enter destination"/></div>
+      <div class="field-group"><label>🗓 Travel Date</label><input type="date" id="bar-date"/></div>
+      <button class="book-btn" onclick="handleBookingBarSearch()">Search Cabs →</button>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="section-inner">
+      <div class="section-tag">Our Fleet</div>
+      <h2 class="section-title">A Cab for Every Journey</h2>
+      <p class="section-sub">From airport transfers to multi-day tours, we have the right vehicle for you.</p>
+      <div class="services-grid">
+        <div class="service-card" onclick="openBookingModal({title:'City Ride Booking',type:'City Ride'})">
+          <div class="service-icon">🚕</div>
+          <h3>City Rides</h3>
+          <p>Quick, comfortable rides within the city with metered fare and zero surprises.</p>
+        </div>
+        <div class="service-card" onclick="openBookingModal({title:'Airport Transfer Booking',type:'Airport Transfer'})">
+          <div class="service-icon">✈️</div>
+          <h3>Airport Transfer</h3>
+          <p>On-time pickup and drop to the airport. Flight tracking included.</p>
+        </div>
+        <div class="service-card" onclick="showCity('chennai')">
+          <div class="service-icon">🗺️</div>
+          <h3>Tourist Packages</h3>
+          <p>Curated day-trip packages to popular destinations with a knowledgeable driver-guide.</p>
+        </div>
+        <div class="service-card" onclick="showTripPage('oneway')">
+          <div class="service-icon">🚐</div>
+          <h3>Outstation Trips</h3>
+          <p>Long-distance one-way and round trips with fixed fares and AC comfort.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="how-section" id="how-section">
+    <div class="section-inner">
+      <div class="section-tag">Simple Steps</div>
+      <h2 class="section-title">Ride in 3 Easy Steps</h2>
+      <p class="section-sub" style="margin-bottom:48px;">No app downloads needed. Book online or call us directly.</p>
+      <div class="steps-grid">
+        <div class="step"><div class="step-num">1</div><h3>Enter Your Route</h3><p>Type your pickup and drop locations. Choose your travel date and preferred car type.</p></div>
+        <div class="step"><div class="step-num">2</div><h3>Pick Your Cab</h3><p>Browse available cabs, compare fares, and choose the one that fits your needs.</p></div>
+        <div class="step"><div class="step-num">3</div><h3>Ride & Relax</h3><p>Your driver arrives on time. Track your ride live and pay however you prefer.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="why-section">
+    <div class="why-grid">
+      <div>
+        <div class="section-tag">Why TouristCab</div>
+        <h2 class="section-title">Safety, Comfort &amp; Transparency</h2>
+        <p class="section-sub">We're built on trust. Every ride is designed to make you feel at home.</p>
+        <ul class="why-list">
+          <li class="why-item"><div class="why-check">🛡️</div><div><h4>Verified Drivers</h4><p>All drivers undergo background checks, license verification, and safety training.</p></div></li>
+          <li class="why-item"><div class="why-check">💰</div><div><h4>Fixed, Transparent Fares</h4><p>The price you see is the price you pay. No surge pricing, no hidden fees.</p></div></li>
+          <li class="why-item"><div class="why-check">📞</div><div><h4>24/7 Customer Support</h4><p>Our support team is always one call away. Anytime, any issue.</p></div></li>
+          <li class="why-item"><div class="why-check">🌐</div><div><h4>Multi-Language Support</h4><p>Book in Tamil, Hindi, or English. Drivers fluent in local languages.</p></div></li>
+        </ul>
+      </div>
+      <div class="why-visual">
+        <div class="rating-big">4.9</div>
+        <div class="stars">★★★★★</div>
+        <div class="rating-sub">Based on 12,000+ verified reviews</div>
+        <div class="metric-row">
+          <div class="metric"><div class="metric-val">98<span>%</span></div><div class="metric-lbl">On-Time Rate</div></div>
+          <div class="metric"><div class="metric-val">50<span>K+</span></div><div class="metric-lbl">Total Rides</div></div>
+          <div class="metric"><div class="metric-val">200<span>+</span></div><div class="metric-lbl">Cities Covered</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section">
+    <h2>Ready for Your Next <span>Adventure?</span></h2>
+    <p>Book your ride today and experience travel done right.</p>
+    <div class="cta-buttons">
+      <button class="btn-primary" onclick="openBookingModal({title:'Book a Ride',type:'General'})">🚕 Book Now</button>
+      <button class="btn-secondary" onclick="window.location.href='tel:+918012345678'">📞 Call Us</button>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-inner">
+      <div class="logo" onclick="showHome()" style="cursor:pointer">Tourist<span>Cab</span></div>
+      <ul class="footer-links">
+        <li><a onclick="showHome()">About</a></li>
+        <li><a onclick="showHome()">Services</a></li>
+        <li><a onclick="openBookingModal({title:'Contact Us',type:'General'})">Contact</a></li>
+        <li><a>Privacy Policy</a></li>
+      </ul>
+      <div class="footer-copy">© 2025 TouristCab. All rights reserved.</div>
+    </div>
+  </footer>
+</div>
+
+<!-- ═══ CITY PAGE ═══ -->
+<div id="page-city" class="page">
+  <div class="city-hero">
+    <div class="city-hero-inner">
+      <button class="back-btn" onclick="showHome()">← Back to Home</button>
+      <div class="city-badge" id="city-badge">Tamil Nadu</div>
+      <h1 id="city-heading">Chennai <span>Cab Packages</span></h1>
+      <p id="city-desc">Explore Chennai's iconic temples, beaches, and heritage sites.</p>
+      <div class="city-stats">
+        <div><div class="city-stat-num">10<span>+</span></div><div class="city-stat-label">Packages</div></div>
+        <div><div class="city-stat-num" id="city-places-count">25<span>+</span></div><div class="city-stat-label">Tourist Places</div></div>
+        <div><div class="city-stat-num">4.8<span>★</span></div><div class="city-stat-label">Avg. Rating</div></div>
+      </div>
+    </div>
+  </div>
+  <section class="packages-section">
+    <div class="packages-inner">
+      <div class="section-tag">Cab Packages</div>
+      <h2 class="section-title" id="pkg-section-title">Chennai Tourist Packages</h2>
+      <p class="section-sub">Pick a package, sit back, and let us handle the rest.</p>
+      <div class="packages-grid" id="packages-grid"></div>
+    </div>
+  </section>
+  <footer>
+    <div class="footer-inner">
+      <div class="logo" onclick="showHome()" style="cursor:pointer">Tourist<span>Cab</span></div>
+      <ul class="footer-links">
+        <li><a onclick="showHome()">Home</a></li>
+        <li><a onclick="openBookingModal({title:'Contact Us',type:'General'})">Contact</a></li>
+      </ul>
+      <div class="footer-copy">© 2025 TouristCab. All rights reserved.</div>
+    </div>
+  </footer>
+</div>
+
+<!-- ═══ BOOK A TRIP PAGE ═══ -->
+<div id="page-trip" class="page">
+  <div class="trip-page">
+    <div class="trip-page-inner">
+      <button class="back-btn" style="color:var(--slate);margin-bottom:20px;" onclick="showHome()">← Back to Home</button>
+      <div class="trip-hero-band">
+        <h1>Book a <span id="trip-page-heading">Trip</span></h1>
+        <p>Hassle-Free Bookings · On-time Pick-up · Reliable Ride for Every Need</p>
+      </div>
+
+      <div class="call-now-bar">
+        <div class="call-icon">📞</div>
+        <div class="call-info">
+          <p>Call us to book instantly</p>
+          <strong>+91 9360406621</strong>
+        </div>
+        <a class="call-btn-link" href="tel:+918012345678">Call Now</a>
+      </div>
+
+      <div class="trip-tabs">
+        <button class="trip-tab active" onclick="switchTripTab('oneway',this)">🛣️ Oneway Trip</button>
+        <button class="trip-tab" onclick="switchTripTab('round',this)">🔄 Round Trip</button>
+        <button class="trip-tab" onclick="switchTripTab('hourly',this)">⏱️ Hourly Rental</button>
+        <button class="trip-tab" onclick="switchTripTab('bulk',this)">📦 Bulk Booking</button>
+      </div>
+
+      <!-- ONEWAY -->
+      <div id="trip-oneway" class="trip-content active">
+        <div class="trip-layout">
+          <div class="trip-main">
+            <h2 class="fare-title">Oneway Trip Fare</h2>
+            <div id="oneway-accordion"></div>
+          </div>
+          <div class="trip-sidebar">
+            <h3>Book Oneway Trip</h3>
+            <div class="form-row single"><div class="form-group"><label>Name *</label><input type="text" placeholder="Your Name" id="ow-name"/></div></div>
+            <div class="form-row single"><div class="form-group"><label>Email *</label><input type="email" placeholder="Your Email" id="ow-email"/></div></div>
+            <div class="form-row"><div class="form-group"><label>Mobile *</label><input type="tel" placeholder="+91" id="ow-mobile"/></div><div class="form-group"><label>Date *</label><input type="date" id="ow-date"/></div></div>
+            <div class="form-row single"><div class="form-group"><label>From City *</label>
+              <select id="ow-from"><option value="">Select City</option><option>Chennai</option><option>Coimbatore</option><option>Madurai</option><option>Trichy</option><option>Salem</option><option>Erode</option><option>Tirupur</option><option>Vellore</option><option>Tirunelveli</option><option>Thanjavur</option></select>
+            </div></div>
+            <div class="form-row single"><div class="form-group"><label>To City *</label>
+              <select id="ow-to"><option value="">Select Destination</option><option>Chennai</option><option>Coimbatore</option><option>Madurai</option><option>Trichy</option><option>Salem</option><option>Erode</option><option>Bangalore</option><option>Pondicherry</option><option>Ooty</option><option>Kodaikanal</option></select>
+            </div></div>
+            <div class="form-row single"><div class="form-group"><label>Comments</label><textarea placeholder="Any special requirements?" id="ow-comments"></textarea></div></div>
+            <button class="modal-submit" onclick="submitTripForm('Oneway Trip')">Book Oneway Trip →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROUND TRIP -->
+      <div id="trip-round" class="trip-content">
+        <div class="trip-layout">
+          <div class="trip-main">
+            <h2 class="fare-title">Round Trip Fare</h2>
+            <div id="round-accordion"></div>
+          </div>
+          <div class="trip-sidebar">
+            <h3>Book Round Trip</h3>
+            <div class="form-row single"><div class="form-group"><label>Name *</label><input type="text" placeholder="Your Name" id="rt-name"/></div></div>
+            <div class="form-row single"><div class="form-group"><label>Email *</label><input type="email" placeholder="Your Email" id="rt-email"/></div></div>
+            <div class="form-row"><div class="form-group"><label>Mobile *</label><input type="tel" placeholder="+91" id="rt-mobile"/></div><div class="form-group"><label>Start Date *</label><input type="date" id="rt-date"/></div></div>
+            <div class="form-row"><div class="form-group"><label>Return Date *</label><input type="date" id="rt-return"/></div><div class="form-group"><label>City *</label>
+              <select id="rt-city"><option value="">Select City</option><option>Chennai</option><option>Coimbatore</option><option>Madurai</option><option>Trichy</option><option>Salem</option></select>
+            </div></div>
+            <div class="form-row single"><div class="form-group"><label>Destination *</label><input type="text" placeholder="Enter destination" id="rt-dest"/></div></div>
+            <div class="form-row single"><div class="form-group"><label>Comments</label><textarea placeholder="Any special requirements?" id="rt-comments"></textarea></div></div>
+            <button class="modal-submit" onclick="submitTripForm('Round Trip')">Book Round Trip →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOURLY -->
+      <div id="trip-hourly" class="trip-content">
+        <div class="trip-layout">
+          <div class="trip-main">
+            <h2 class="fare-title">Hourly Rental Fare</h2>
+            <div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;">
+              <div class="form-group" style="flex:1;min-width:140px;"><label>City</label>
+                <select onchange="filterHourlyTable(this.value)">
+                  <option value="">All Cities</option>
+                  <option>Coimbatore</option><option>Chennai</option><option>Madurai</option><option>Trichy</option><option>Salem</option>
+                </select>
+              </div>
+              <div class="form-group" style="flex:1;min-width:140px;"><label>Taxi Type</label>
+                <select onchange="filterHourlyTable2(this.value)">
+                  <option value="">All Types</option>
+                  <option>Red</option><option>Go</option><option>Prime</option>
+                </select>
+              </div>
+            </div>
+            <div class="hourly-table-wrap">
+              <table class="hourly-table" id="hourly-table">
+                <thead><tr><th>City</th><th>Type</th><th>Hours</th><th>Base Fare</th><th>Free KM</th><th>Extra Fare</th></tr></thead>
+                <tbody id="hourly-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="trip-sidebar">
+            <h3>Book Hourly Rental</h3>
+            <div class="form-row single"><div class="form-group"><label>Name *</label><input type="text" placeholder="Your Name" id="hr-name"/></div></div>
+            <div class="form-row single"><div class="form-group"><label>Mobile *</label><input type="tel" placeholder="+91" id="hr-mobile"/></div></div>
+            <div class="form-row"><div class="form-group"><label>Date *</label><input type="date" id="hr-date"/></div><div class="form-group"><label>Hours *</label>
+              <select id="hr-hours"><option value="">Select Hours</option><option>1 Hour</option><option>2 Hours</option><option>3 Hours</option><option>4 Hours</option><option>5 Hours</option><option>6 Hours</option><option>8 Hours</option><option>10 Hours</option><option>12 Hours</option></select>
+            </div></div>
+            <div class="form-row single"><div class="form-group"><label>Pickup City *</label>
+              <select id="hr-city"><option value="">Select City</option><option>Chennai</option><option>Coimbatore</option><option>Madurai</option><option>Trichy</option><option>Salem</option></select>
+            </div></div>
+            <div class="form-row single"><div class="form-group"><label>Comments</label><textarea placeholder="Any special requirements?" id="hr-comments"></textarea></div></div>
+            <button class="modal-submit" onclick="submitTripForm('Hourly Rental')">Book Hourly Rental →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- BULK -->
+      <div id="trip-bulk" class="trip-content">
+        <div class="trip-layout">
+          <div class="trip-main">
+            <div class="bulk-info">
+              <h3 style="font-family:'Poppins',sans-serif;font-size:1.1rem;font-weight:700;color:var(--navy);margin-bottom:12px;">📦 Bulk Booking Benefits</h3>
+              <p>✅ Book 5+ cabs at once for corporate events, tours, and group travel<br/>
+              ✅ Special discounted rates for bulk orders<br/>
+              ✅ Dedicated account manager assigned<br/>
+              ✅ Custom invoicing and GST bills<br/>
+              ✅ Priority driver assignment<br/>
+              ✅ Real-time fleet tracking</p>
+            </div>
+            <div class="accordion-item">
+              <div class="accordion-head" onclick="toggleAcc(this)">
+                Corporate packages <span class="acc-arrow">▼</span>
+              </div>
+              <div class="accordion-body">
+                <table class="fare-table">
+                  <thead><tr><th>Package</th><th>Cabs</th><th>Duration</th><th>Discount</th></tr></thead>
+                  <tbody>
+                    <tr><td>Small Group</td><td>5–9</td><td>Any</td><td>10% off</td></tr>
+                    <tr><td>Medium Fleet</td><td>10–19</td><td>Any</td><td>15% off</td></tr>
+                    <tr><td>Large Fleet</td><td>20+</td><td>Any</td><td>20% off</td></tr>
+                    <tr><td>Monthly Contract</td><td>Any</td><td>30 days</td><td>25% off</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="trip-sidebar">
+            <h3>Bulk Booking Enquiry</h3>
+            <div class="form-row single"><div class="form-group"><label>Company Name *</label><input type="text" placeholder="Your Company" id="bk-company"/></div></div>
+            <div class="form-row single"><div class="form-group"><label>Contact Person *</label><input type="text" placeholder="Name" id="bk-name"/></div></div>
+            <div class="form-row"><div class="form-group"><label>Mobile *</label><input type="tel" placeholder="+91" id="bk-mobile"/></div><div class="form-group"><label>Email *</label><input type="email" placeholder="Email" id="bk-email"/></div></div>
+            <div class="form-row"><div class="form-group"><label>No. of Cabs *</label><input type="number" placeholder="e.g. 10" min="5" id="bk-cabs"/></div><div class="form-group"><label>Date *</label><input type="date" id="bk-date"/></div></div>
+            <div class="form-row single"><div class="form-group"><label>Pickup City *</label>
+              <select id="bk-city"><option value="">Select City</option><option>Chennai</option><option>Coimbatore</option><option>Madurai</option><option>Trichy</option><option>Salem</option></select>
+            </div></div>
+            <div class="form-row single"><div class="form-group"><label>Requirements</label><textarea placeholder="Describe your bulk booking needs..." id="bk-comments"></textarea></div></div>
+            <button class="modal-submit" onclick="submitTripForm('Bulk Booking')">Submit Bulk Enquiry →</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <footer>
+    <div class="footer-inner">
+      <div class="logo" onclick="showHome()" style="cursor:pointer">Tourist<span>Cab</span></div>
+      <ul class="footer-links"><li><a onclick="showHome()">Home</a></li></ul>
+      <div class="footer-copy">© 2025 TouristCab. All rights reserved.</div>
+    </div>
+  </footer>
+</div>
+
+<!-- ═══ BOOKING MODAL ═══ -->
+<div class="modal-overlay" id="bookingModal" onclick="handleModalOverlayClick(event)">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modal-title">Book a Ride</div>
+        <div class="modal-subtitle" id="modal-subtitle">Fill in your details and we'll confirm your booking</div>
+      </div>
+      <button class="modal-close" onclick="closeBookingModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body-content">
+      <!-- injected by JS -->
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE → CITIES MAP ──────────────────────────────────────────────────────
+const stateData = {
+  "Tamil Nadu": ["chennai","coimbatore","madurai","trichy","salem","tirupur","vellore","erode","tirunelveli","thanjavur","pollachi","kanyakumari","ooty","kodaikanal","mahabalipuram","pondicherry","rameswaram","thoothukudi"],
+  "Kerala": ["kochi","thiruvananthapuram","kozhikode","munnar","alleppey","wayanad","kovalam","thekkady"],
+  "Karnataka": ["bengaluru","mysuru","mangaluru","coorg","hampi","chikmagalur"],
+  "Maharashtra": ["mumbai","pune","nagpur","nashik","lonavala","mahabaleshwar"]
+};
+const stateOrder = ["Tamil Nadu","Kerala","Karnataka","Maharashtra"];
+
+function cityLabel(key) {
+  return key.split('-').map(w => w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
+}
+
+// ── CITY DATA ──────────────────────────────────────────────────────────────
+const cityData = {
+  chennai: {
+    state:"Tamil Nadu", name:"Chennai", desc:"Explore Chennai's iconic temples, beaches, and heritage sites with our handpicked cab packages. Experienced driver-guides, AC vehicles, and zero hidden charges.", placesCount:"25",
+    packages:[
+      {title:"Marina Beach & Fort St. George Day Tour",badge:"Bestseller",emoji:"🏖️",desc:"Start at Marina Beach at sunrise, visit Fort St. George, then explore the Government Museum and Kapaleeshwarar Temple.",places:["Marina Beach","Fort St. George","Kapaleeshwarar Temple","Government Museum"],duration:"8 hrs",seats:"4",price:"₹1,499"},
+      {title:"Temple Hopping – Chennai Sacred Trail",badge:"Popular",emoji:"🛕",desc:"Visit 5 of Chennai's most revered temples including Kapaleeshwarar, Parthasarathy, and Ashtalakshmi Kovil in one day.",places:["Kapaleeshwarar","Parthasarathy","Ashtalakshmi","Marundeeswarar","Vadapalani"],duration:"7 hrs",seats:"4",price:"₹1,299"},
+      {title:"Chennai Heritage Walk by Cab",badge:"History",emoji:"🏛️",desc:"George Town, Armenian Street, Madras High Court, and Valluvar Kottam — the old soul of Chennai awaits.",places:["George Town","Armenian Street","High Court","Valluvar Kottam"],duration:"6 hrs",seats:"4",price:"₹999"},
+      {title:"ECR Beach & Crocodile Park Tour",badge:"Family",emoji:"🐊",desc:"Drive down the scenic East Coast Road, stop at Crocodile Park and Dakshinachitra, and end the day at Covelong beach.",places:["Crocodile Park","Dakshinachitra","Covelong Beach","Tiger Cave"],duration:"9 hrs",seats:"6",price:"₹1,899"},
+      {title:"Mahabalipuram Day Trip from Chennai",badge:"Day Trip",emoji:"⛩️",desc:"Head south to UNESCO-listed Mahabalipuram — Shore Temple, Pancha Rathas, Arjuna's Penance, and more.",places:["Shore Temple","Pancha Rathas","Arjuna's Penance","Krishna's Butter Ball"],duration:"10 hrs",seats:"4",price:"₹2,199"},
+      {title:"Kanchipuram Silk & Temples Tour",badge:"Culture",emoji:"🧵",desc:"Visit the 1000-pillar Ekambareswarar Temple, Kailasanathar Temple, and a genuine silk saree weaving unit.",places:["Ekambareswarar","Kailasanathar","Kamakshi Amman","Silk Weaving Unit"],duration:"9 hrs",seats:"4",price:"₹1,999"},
+      {title:"Chennai Night City Tour",badge:"Night Tour",emoji:"🌃",desc:"Experience Chennai after dark — Marina Beach promenade, illuminated Lighthouse, and Besant Nagar.",places:["Marina Promenade","Chennai Lighthouse","Besant Nagar","VGP Golden Beach"],duration:"4 hrs",seats:"4",price:"₹799"},
+      {title:"Pulicat Lake & Bird Sanctuary",badge:"Nature",emoji:"🦩",desc:"Drive north to Pulicat Lake, the second largest brackish lagoon in India, home to flamingos and pelicans.",places:["Pulicat Lake","Bird Sanctuary","Pulicat Fort Ruins","Fishing Village"],duration:"8 hrs",seats:"6",price:"₹1,699"},
+      {title:"Tirupati One-Day Package from Chennai",badge:"Pilgrimage",emoji:"🙏",desc:"Comfortable AC vehicle to Tirumala, including wait time for darshan, prasadam pickup, and return drop.",places:["Tirumala Temple","Padmavathi Temple","Silathoranam","Sri Venkateswara Museum"],duration:"14 hrs",seats:"4",price:"₹3,499"},
+      {title:"Pondicherry Weekend Escape",badge:"Weekend",emoji:"🌊",desc:"Drive to Pondicherry for French Quarter, Auroville, Paradise Beach, and the Promenade along the Bay of Bengal.",places:["French Quarter","Auroville","Paradise Beach","Sri Aurobindo Ashram"],duration:"Full Day",seats:"4",price:"₹2,699"},
+    ]
+  },
+  coimbatore: {
+    state:"Tamil Nadu", name:"Coimbatore", desc:"Explore Coimbatore, the gateway to the Nilgiris. Waterfalls, hill stations, temples, and wildlife await.", placesCount:"20",
+    packages:[
+      {title:"Ooty & Coonoor Hill Station Day Trip",badge:"Bestseller",emoji:"🌿",desc:"Drive up the scenic Nilgiri ghats to Ooty and Coonoor — tea estates, botanical gardens, and Doddabetta peak.",places:["Doddabetta","Botanical Garden","Coonoor Tea Estate","Rose Garden"],duration:"10 hrs",seats:"4",price:"₹2,499"},
+      {title:"Marudamalai & Vellingiri Temple Tour",badge:"Pilgrimage",emoji:"🛕",desc:"Visit the hilltop Marudamalai Temple and the sacred Vellingiri Hills, the 'Western Kailash' of South India.",places:["Marudamalai Temple","Vellingiri Hills","Perur Pateeswarar","Eachanari Vinayagar"],duration:"7 hrs",seats:"4",price:"₹1,299"},
+      {title:"Anamalai Tiger Reserve Safari",badge:"Wildlife",emoji:"🐯",desc:"Guided jeep safari inside one of South India's best tiger reserves. Spot elephants, leopards, and rare birds.",places:["Anamalai Reserve","Topslip","Parambikulam","Tribal Villages"],duration:"9 hrs",seats:"6",price:"₹2,299"},
+      {title:"Pollachi Waterfalls Tour",badge:"Nature",emoji:"🌊",desc:"Thalaiyar Falls, Monkey Falls, and the scenic Valparai plateau — a full day of natural beauty.",places:["Monkey Falls","Aliyar Dam","Valparai","Sholayar Dam"],duration:"9 hrs",seats:"4",price:"₹1,799"},
+      {title:"Kovai City Highlights Tour",badge:"City Tour",emoji:"🏙️",desc:"VOC Park, Perur Temple, Gedee Car Museum, and the famous Coimbatore textile market.",places:["VOC Park","Perur Temple","Gedee Museum","Brookefields Mall"],duration:"6 hrs",seats:"4",price:"₹999"},
+      {title:"Kodaikanal Day Trip from Coimbatore",badge:"Day Trip",emoji:"⛰️",desc:"Scenic drive to Kodaikanal — Coaker's Walk, Pillar Rocks, Berijam Lake, and Silver Cascade Falls.",places:["Coaker's Walk","Pillar Rocks","Berijam Lake","Silver Cascade"],duration:"12 hrs",seats:"4",price:"₹3,199"},
+      {title:"Palani Murugan Pilgrimage",badge:"Pilgrimage",emoji:"🙏",desc:"Visit the famous Palani Dhandayuthapani Swamy Temple and the nearby Agasthiyar Falls.",places:["Palani Temple","Agasthiyar Falls","Adi Shakthi Temple","Mutharamman Temple"],duration:"8 hrs",seats:"4",price:"₹1,599"},
+      {title:"Siruvani Dam & Forest Trek",badge:"Adventure",emoji:"🌲",desc:"Visit Siruvani, home to some of India's sweetest water. Forest drive, dam view, and light trekking.",places:["Siruvani Dam","Siruvani Waterfalls","Forest Reserve","Ethnic Village"],duration:"7 hrs",seats:"4",price:"₹1,399"},
+      {title:"Coimbatore Sunrise to Sunset Package",badge:"Full Day",emoji:"☀️",desc:"A curated full-day experience covering the best of Coimbatore from morning prayers to evening bazaar.",places:["Marudamalai","VOC Park","Brookefields","Perur Temple"],duration:"10 hrs",seats:"4",price:"₹1,999"},
+    ]
+  },
+  madurai: {
+    state:"Tamil Nadu", name:"Madurai", desc:"The Temple City of India. Explore ancient Dravidian temples, vibrant bazaars, and centuries-old culture.", placesCount:"18",
+    packages:[
+      {title:"Meenakshi Amman Temple Tour",badge:"Bestseller",emoji:"🛕",desc:"Guided tour of the magnificent Meenakshi Amman Temple — all 14 gopurams, the golden lotus tank, and evening aarti.",places:["Meenakshi Temple","Thirumalai Nayakkar Mahal","Gandhi Museum","Vandiyur Mariamman Teppakulam"],duration:"7 hrs",seats:"4",price:"₹1,199"},
+      {title:"Kodaikanal Day Trip from Madurai",badge:"Day Trip",emoji:"⛰️",desc:"Escape to the Queen of Hill Stations — Coaker's Walk, Pillar Rocks, Berijam Lake and Silver Cascade.",places:["Coaker's Walk","Pillar Rocks","Berijam Lake","Bryant Park"],duration:"11 hrs",seats:"4",price:"₹2,899"},
+      {title:"Rameshwaram Pilgrimage Package",badge:"Pilgrimage",emoji:"🙏",desc:"Full-day trip to Rameshwaram — Ramanathaswamy Temple, Agni Theertham, Dhanushkodi ruins and Pamban Bridge view.",places:["Ramanathaswamy","Agni Theertham","Dhanushkodi","Pamban Bridge"],duration:"12 hrs",seats:"4",price:"₹3,299"},
+      {title:"Madurai Full Day City Sightseeing",badge:"City Tour",emoji:"🗺️",desc:"Complete Madurai darshan in one day — temples, museums, palace, and the famous Madurai Idli for lunch.",places:["Meenakshi Temple","Gandhi Museum","Thirumalai Palace","Vandiyur Teppakulam"],duration:"9 hrs",seats:"4",price:"₹1,499"},
+      {title:"Kanyakumari Sunrise Trip",badge:"Sunrise",emoji:"🌅",desc:"Early morning drive to Kanyakumari to witness the spectacular sunrise at India's southernmost tip.",places:["Kanyakumari Temple","Vivekananda Rock","Thiruvalluvar Statue","Sunset Point"],duration:"Full Day",seats:"4",price:"₹3,199"},
+      {title:"Courtallam Waterfalls Adventure",badge:"Adventure",emoji:"🌊",desc:"Drive to the 'Spa of South India' — five powerful waterfalls in a lush green forest setting.",places:["Main Falls","Five Falls","Shenbagadevi Falls","Old Courtallam"],duration:"10 hrs",seats:"4",price:"₹2,199"},
+    ]
+  },
+  kanyakumari: {
+    state:"Tamil Nadu", name:"Kanyakumari", desc:"Where three oceans meet. The southernmost tip of India offers breathtaking sunrises, ancient temples, and unique geography.", placesCount:"15",
+    packages:[
+      {title:"Kanyakumari Sunrise & Sunset Package",badge:"Bestseller",emoji:"🌅",desc:"Experience the magical sunrise from Vivekananda Rock and the stunning sunset at the tip of India.",places:["Vivekananda Rock","Thiruvalluvar Statue","Sunrise View","Sunset Point"],duration:"8 hrs",seats:"4",price:"₹1,399"},
+      {title:"Kanyakumari Temple & Beach Tour",badge:"Popular",emoji:"🛕",desc:"Kanyakumari Amman Temple, Suchindram Thanumalayan Temple, Padmanabhapuram Palace, and pristine beaches.",places:["Amman Temple","Suchindram Temple","Padmanabhapuram Palace","Sanguthurai Beach"],duration:"9 hrs",seats:"4",price:"₹1,699"},
+      {title:"Full Day Kanyakumari Sightseeing",badge:"City Tour",emoji:"🗺️",desc:"Complete coverage — temples, beaches, museums, and the three-ocean confluence.",places:["Vivekananda Rock","Amman Temple","Gandhi Memorial","Wax Museum"],duration:"9 hrs",seats:"4",price:"₹1,799"},
+    ]
+  },
+  ooty: {
+    state:"Tamil Nadu", name:"Ooty", desc:"The Queen of Hill Stations. Rolling tea gardens, pine forests, and colonial-era charm await in the Nilgiris.", placesCount:"20",
+    packages:[
+      {title:"Ooty Classic Sightseeing Tour",badge:"Bestseller",emoji:"🌿",desc:"Botanical Garden, Ooty Lake, Doddabetta Peak, Rose Garden, and the famous Ooty viewpoints.",places:["Botanical Garden","Ooty Lake","Doddabetta Peak","Rose Garden"],duration:"8 hrs",seats:"4",price:"₹1,799"},
+      {title:"Coonoor Tea Estate Tour",badge:"Popular",emoji:"🍵",desc:"Explore Coonoor's lush tea gardens, visit a working tea factory, and spot the Nilgiri tahr at Sim's Park.",places:["Tea Estate","Tea Factory","Sim's Park","Lamb's Rock"],duration:"7 hrs",seats:"4",price:"₹1,499"},
+      {title:"Mudumalai & Bandipur Safari",badge:"Wildlife",emoji:"🐅",desc:"Drive down into Mudumalai Tiger Reserve for a morning jeep safari among elephants and spotted deer.",places:["Mudumalai Reserve","Bandipur","Theppakadu","Gopalaswamy Hills"],duration:"9 hrs",seats:"4",price:"₹2,399"},
+      {title:"Pykara Falls & Lake Circuit",badge:"Nature",emoji:"🌊",desc:"Pykara River, Pykara Falls, Emerald Lake, and the Avalanche area — pristine Nilgiri wilderness.",places:["Pykara Falls","Pykara Lake","Emerald Lake","Avalanche"],duration:"8 hrs",seats:"4",price:"₹1,699"},
+    ]
+  },
+  // ── KERALA ──
+  kochi: {
+    state:"Kerala", name:"Kochi", desc:"Explore Kochi's colonial charm, backwaters, and spice markets with our curated cab packages across the Queen of the Arabian Sea.", placesCount:"18",
+    packages:[
+      {title:"Fort Kochi Heritage Walk",badge:"Bestseller",emoji:"🏛️",desc:"Chinese Fishing Nets, Santa Cruz Basilica, Mattancherry Palace, and the Jewish Synagogue in one day.",places:["Chinese Fishing Nets","Santa Cruz Basilica","Mattancherry Palace","Jewish Synagogue"],duration:"7 hrs",seats:"4",price:"₹1,399"},
+      {title:"Alleppey Backwaters Day Trip",badge:"Popular",emoji:"🛶",desc:"Drive to Alleppey for a houseboat experience along the famous Kerala backwaters and coconut lagoons.",places:["Alleppey Backwaters","Houseboat Point","Punnamada Lake","Marari Beach"],duration:"10 hrs",seats:"4",price:"₹2,399"},
+      {title:"Munnar Hill Station Escape",badge:"Day Trip",emoji:"🌿",desc:"Tea gardens, Eravikulam National Park, and the misty hills of Munnar — a scenic full-day drive.",places:["Tea Museum","Eravikulam Park","Mattupetty Dam","Echo Point"],duration:"12 hrs",seats:"4",price:"₹3,199"},
+      {title:"Kochi City & Marine Drive Tour",badge:"City Tour",emoji:"🌊",desc:"Marine Drive, Lulu Mall, Bolgatty Palace, and a sunset cruise across Kochi backwaters.",places:["Marine Drive","Bolgatty Palace","Willingdon Island","Vypin Beach"],duration:"6 hrs",seats:"4",price:"₹999"},
+    ]
+  },
+  thiruvananthapuram: {
+    state:"Kerala", name:"Thiruvananthapuram", desc:"Kerala's capital — temples, palaces, and pristine beaches like Kovalam, all within easy reach.", placesCount:"15",
+    packages:[
+      {title:"Padmanabhaswamy Temple & Palace Tour",badge:"Bestseller",emoji:"🛕",desc:"Visit the iconic Padmanabhaswamy Temple, Napier Museum, and Kuthiramalika Palace.",places:["Padmanabhaswamy Temple","Napier Museum","Kuthiramalika Palace","Zoo"],duration:"7 hrs",seats:"4",price:"₹1,299"},
+      {title:"Kovalam Beach Day Trip",badge:"Popular",emoji:"🏖️",desc:"Lighthouse Beach, Hawah Beach, and a relaxing day along Kovalam's golden sands.",places:["Lighthouse Beach","Hawah Beach","Samudra Beach","Vizhinjam"],duration:"6 hrs",seats:"4",price:"₹999"},
+      {title:"Ponmudi Hill Station Trip",badge:"Nature",emoji:"⛰️",desc:"Scenic hairpin drive up to Ponmudi hills — tea estates, viewpoints, and cool mountain air.",places:["Ponmudi Hills","Golden Valley","Meenmutty Falls","Viewpoint"],duration:"8 hrs",seats:"4",price:"₹1,599"},
+    ]
+  },
+  kozhikode: {
+    state:"Kerala", name:"Kozhikode", desc:"Calicut's spice heritage, beaches, and gateway to Wayanad's misty hills.", placesCount:"14",
+    packages:[
+      {title:"Kozhikode Beach & Heritage Tour",badge:"Popular",emoji:"🏖️",desc:"Kozhikode Beach, Mananchira Square, and the historic spice bazaar.",places:["Kozhikode Beach","Mananchira Square","Spice Bazaar","Kappad Beach"],duration:"6 hrs",seats:"4",price:"₹999"},
+      {title:"Wayanad Wildlife & Hills Trip",badge:"Wildlife",emoji:"🐘",desc:"Drive into the Western Ghats for Wayanad's wildlife sanctuary, waterfalls, and viewpoints.",places:["Wayanad Sanctuary","Edakkal Caves","Chembra Peak","Soochipara Falls"],duration:"11 hrs",seats:"4",price:"₹2,799"},
+    ]
+  },
+  // ── KARNATAKA ──
+  bengaluru: {
+    state:"Karnataka", name:"Bengaluru", desc:"India's Garden City — palaces, parks, lakes, and a gateway to Coorg and Mysuru.", placesCount:"22",
+    packages:[
+      {title:"Bengaluru Palace & Gardens Tour",badge:"Bestseller",emoji:"🏰",desc:"Bangalore Palace, Lalbagh Botanical Garden, and Cubbon Park in a relaxed city tour.",places:["Bangalore Palace","Lalbagh Garden","Cubbon Park","Vidhana Soudha"],duration:"7 hrs",seats:"4",price:"₹1,399"},
+      {title:"Mysuru Day Trip from Bengaluru",badge:"Popular",emoji:"🏯",desc:"Mysuru Palace, Chamundi Hills, Brindavan Gardens — a classic South India day trip.",places:["Mysuru Palace","Chamundi Hills","Brindavan Gardens","St. Philomena's Church"],duration:"12 hrs",seats:"4",price:"₹3,299"},
+      {title:"Nandi Hills Sunrise Trip",badge:"Sunrise",emoji:"🌅",desc:"Early morning drive to Nandi Hills for a spectacular sunrise above the clouds.",places:["Nandi Hills","Tipu's Drop","Amrit Sarovar","Nandi Temple"],duration:"5 hrs",seats:"4",price:"₹999"},
+      {title:"Coorg Coffee Estate Getaway",badge:"Nature",emoji:"☕",desc:"Scenic drive into Coorg's coffee plantations, Abbey Falls, and Raja's Seat viewpoint.",places:["Abbey Falls","Raja's Seat","Coffee Estate","Omkareshwara Temple"],duration:"Full Day",seats:"4",price:"₹3,899"},
+    ]
+  },
+  mysuru: {
+    state:"Karnataka", name:"Mysuru", desc:"The City of Palaces — royal heritage, gardens, and the gateway to Karnataka's wildlife reserves.", placesCount:"16",
+    packages:[
+      {title:"Mysuru Palace & City Tour",badge:"Bestseller",emoji:"🏯",desc:"Mysuru Palace illuminated tour, Chamundi Hills, and Devaraja Market.",places:["Mysuru Palace","Chamundi Hills","Devaraja Market","Jaganmohan Palace"],duration:"7 hrs",seats:"4",price:"₹1,299"},
+      {title:"Bandipur Wildlife Safari",badge:"Wildlife",emoji:"🐅",desc:"Jeep safari through Bandipur Tiger Reserve, spotting elephants and deer.",places:["Bandipur Reserve","Safari Zone","Watch Tower","Forest Trail"],duration:"8 hrs",seats:"4",price:"₹2,199"},
+    ]
+  },
+  coorg: {
+    state:"Karnataka", name:"Coorg", desc:"Scotland of India — misty coffee estates, waterfalls, and the Western Ghats.", placesCount:"14",
+    packages:[
+      {title:"Coorg Coffee & Waterfalls Tour",badge:"Bestseller",emoji:"☕",desc:"Abbey Falls, coffee plantation walk, Raja's Seat sunset, and Namdroling Monastery.",places:["Abbey Falls","Raja's Seat","Namdroling Monastery","Coffee Estate"],duration:"8 hrs",seats:"4",price:"₹1,799"},
+    ]
+  },
+  // ── MAHARASHTRA ──
+  mumbai: {
+    state:"Maharashtra", name:"Mumbai", desc:"The City of Dreams — colonial landmarks, beaches, and Bollywood glamour, all in one curated cab tour.", placesCount:"24",
+    packages:[
+      {title:"Mumbai Heritage & Gateway Tour",badge:"Bestseller",emoji:"🏛️",desc:"Gateway of India, Marine Drive, Chhatrapati Shivaji Terminus, and the Hanging Gardens.",places:["Gateway of India","Marine Drive","CST Station","Hanging Gardens"],duration:"8 hrs",seats:"4",price:"₹1,599"},
+      {title:"Elephanta Caves Day Trip",badge:"History",emoji:"🗿",desc:"Ferry-assisted trip to the UNESCO World Heritage Elephanta Caves with cab transfers included.",places:["Elephanta Caves","Gateway of India","Ferry Point","Cave Temples"],duration:"6 hrs",seats:"4",price:"₹1,299"},
+      {title:"Lonavala & Khandala Hill Trip",badge:"Nature",emoji:"⛰️",desc:"Scenic Western Ghats drive to Lonavala — waterfalls, viewpoints, and the famous chikki bazaar.",places:["Tiger's Leap","Bhushi Dam","Lohagad Fort","Khandala Viewpoint"],duration:"10 hrs",seats:"4",price:"₹2,499"},
+      {title:"Bollywood & Bandra Tour",badge:"Popular",emoji:"🎬",desc:"Bandra-Worli Sea Link drive-by, Bandstand, Carter Road, and celebrity bungalow spotting.",places:["Bandra-Worli Sea Link","Bandstand","Carter Road","Mount Mary Church"],duration:"5 hrs",seats:"4",price:"₹1,199"},
+    ]
+  },
+  pune: {
+    state:"Maharashtra", name:"Pune", desc:"The Oxford of the East — forts, hills, and a gateway to Lonavala and Mahabaleshwar.", placesCount:"18",
+    packages:[
+      {title:"Pune Heritage & Shaniwar Wada Tour",badge:"Bestseller",emoji:"🏰",desc:"Shaniwar Wada, Aga Khan Palace, Dagdusheth Temple, and Parvati Hill.",places:["Shaniwar Wada","Aga Khan Palace","Dagdusheth Temple","Parvati Hill"],duration:"6 hrs",seats:"4",price:"₹1,199"},
+      {title:"Sinhagad Fort Day Trip",badge:"Adventure",emoji:"🏔️",desc:"Drive up to the historic Sinhagad Fort for panoramic Sahyadri views and local Pithla Bhakri lunch.",places:["Sinhagad Fort","Khadakwasla Dam","Viewpoint","Local Market"],duration:"6 hrs",seats:"4",price:"₹1,099"},
+      {title:"Mahabaleshwar Strawberry Hills Trip",badge:"Nature",emoji:"🍓",desc:"Strawberry farms, Venna Lake, Arthur's Seat, and the cool hill air of Mahabaleshwar.",places:["Venna Lake","Arthur's Seat","Strawberry Farm","Mapro Garden"],duration:"12 hrs",seats:"4",price:"₹3,499"},
+    ]
+  },
+  lonavala: {
+    state:"Maharashtra", name:"Lonavala", desc:"A misty hill retreat between Mumbai and Pune — waterfalls, forts, and chikki shops.", placesCount:"12",
+    packages:[
+      {title:"Lonavala Waterfalls & Forts Tour",badge:"Bestseller",emoji:"🌊",desc:"Bhushi Dam, Tiger's Leap, Lohagad Fort, and Karla Caves in a single scenic day.",places:["Bhushi Dam","Tiger's Leap","Lohagad Fort","Karla Caves"],duration:"7 hrs",seats:"4",price:"₹1,399"},
+    ]
+  }
+};
+
+function defaultPackages(n) {
+  return [
+    {title:`${n} City Highlights Tour`,badge:"Popular",emoji:"🗺️",desc:`Explore the best of ${n} with a curated full-day sightseeing tour.`,places:["City Center","Main Temple","Heritage Site","Local Market"],duration:"8 hrs",seats:"4",price:"₹1,299"},
+    {title:`${n} Temple Circuit`,badge:"Pilgrimage",emoji:"🛕",desc:`Visit ${n}'s most revered temples with an experienced driver-guide.`,places:["Main Temple","Local Shrine","Heritage Shrine","Old Kovil"],duration:"7 hrs",seats:"4",price:"₹1,099"},
+    {title:`${n} Day Transfer Package`,badge:"Transfer",emoji:"🚕",desc:`Comfortable AC cab from ${n} to nearby major cities with an experienced highway driver.`,places:["Pickup Point","Highway Route","Rest Stop","Drop Point"],duration:"Varies",seats:"4",price:"₹2,499"},
+    {title:`${n} Nature & Waterfalls Tour`,badge:"Nature",emoji:"🌊",desc:`Discover the natural beauty around ${n} — waterfalls, dams, and lush landscapes.`,places:["Waterfall","Dam View","Forest Park","Scenic Drive"],duration:"9 hrs",seats:"6",price:"₹1,699"},
+    {title:`${n} Heritage Walk`,badge:"Heritage",emoji:"🏛️",desc:`Explore historical wonders of ${n} with our knowledgeable driver-guide.`,places:["Old Town","Heritage Fort","Museum","Ancient Market"],duration:"6 hrs",seats:"4",price:"₹999"},
+    {title:`${n} Family Day Out`,badge:"Family",emoji:"🎠",desc:`A fun-filled family package covering parks and local food stops around ${n}.`,places:["Amusement Park","Picnic Spot","Local Restaurant","Shopping Area"],duration:"8 hrs",seats:"6",price:"₹1,499"},
+  ];
+}
+
+// Oneway fares data
+const onewayFares = {
+  "From Coimbatore": [["Coimbatore","Chennai","Indica","Rs.3,200/-","320","Rs.10/KM"],["Coimbatore","Bangalore","Indica","Rs.3,500/-","350","Rs.10/KM"],["Coimbatore","Ooty","Indica","Rs.1,200/-","90","Rs.13/KM"],["Coimbatore","Madurai","Indica","Rs.2,600/-","220","Rs.12/KM"]],
+  "From Chennai": [["Chennai","Coimbatore","Indica","Rs.3,200/-","320","Rs.10/KM"],["Chennai","Madurai","Indica","Rs.2,800/-","280","Rs.10/KM"],["Chennai","Trichy","Indica","Rs.2,400/-","240","Rs.10/KM"],["Chennai","Pondicherry","Indica","Rs.1,600/-","160","Rs.10/KM"]],
+  "From Trichy": [["Trichy","Chennai","Indica","Rs.2,400/-","240","Rs.10/KM"],["Trichy","Madurai","Indica","Rs.1,400/-","140","Rs.10/KM"],["Trichy","Coimbatore","Indica","Rs.2,000/-","200","Rs.10/KM"]],
+  "From Madurai": [["Madurai","Chennai","Indica","Rs.2,800/-","280","Rs.10/KM"],["Madurai","Trichy","Indica","Rs.1,400/-","140","Rs.10/KM"],["Madurai","Kanyakumari","Indica","Rs.1,800/-","180","Rs.10/KM"],["Madurai","Coimbatore","Indica","Rs.2,600/-","220","Rs.12/KM"]],
+  "From Salem": [["Salem","Chennai","Indica","Rs.2,000/-","200","Rs.10/KM"],["Salem","Coimbatore","Indica","Rs.1,200/-","120","Rs.10/KM"],["Salem","Trichy","Indica","Rs.1,400/-","140","Rs.10/KM"]],
+  "From Erode": [["Erode","Chennai","Indica","Rs.2,200/-","220","Rs.10/KM"],["Erode","Coimbatore","Indica","Rs.800/-","80","Rs.10/KM"],["Erode","Trichy","Indica","Rs.1,600/-","160","Rs.10/KM"]],
+};
+
+// Hourly fare data
+const hourlyFares = [
+  ["Coimbatore","Red","1Hour","Rs.878/-","10","Rs.17/KM & Rs.2/Min"],
+  ["Coimbatore","Red","2Hours","Rs.1,028/-","20","Rs.17/KM & Rs.2/Min"],
+  ["Coimbatore","Red","3Hours","Rs.1,128/-","30","Rs.17/KM & Rs.2/Min"],
+  ["Coimbatore","Red","4Hours","Rs.1,128/-","40","Rs.17/KM & Rs.2/Min"],
+  ["Coimbatore","Red","5Hours","Rs.1,378/-","50","Rs.17/KM & Rs.2/Min"],
+  ["Coimbatore","Red","6Hours","Rs.1,628/-","60","Rs.17/KM & Rs.2/Min"],
+  ["Coimbatore","Red","8Hours","Rs.2,128/-","80","Rs.14/KM & Rs.2/Min"],
+  ["Coimbatore","Red","10Hours","Rs.2,528/-","100","Rs.14/KM & Rs.2/Min"],
+  ["Coimbatore","Red","12Hours","Rs.2,678/-","100","Rs.14/KM & Rs.2/Min"],
+  ["Coimbatore","Go","1Hour","Rs.353/-","10","Rs.16/KM & Rs.2/Min"],
+  ["Coimbatore","Go","2Hours","Rs.553/-","20","Rs.16/KM & Rs.2/Min"],
+  ["Coimbatore","Go","4Hours","Rs.853/-","40","Rs.16/KM & Rs.2/Min"],
+  ["Coimbatore","Go","6Hours","Rs.1,153/-","60","Rs.14/KM & Rs.2/Min"],
+  ["Coimbatore","Go","8Hours","Rs.1,453/-","80","Rs.12/KM & Rs.2/Min"],
+  ["Chennai","Red","1Hour","Rs.950/-","10","Rs.18/KM & Rs.2/Min"],
+  ["Chennai","Red","4Hours","Rs.1,250/-","40","Rs.18/KM & Rs.2/Min"],
+  ["Chennai","Red","8Hours","Rs.2,250/-","80","Rs.15/KM & Rs.2/Min"],
+  ["Chennai","Go","1Hour","Rs.390/-","10","Rs.17/KM & Rs.2/Min"],
+  ["Chennai","Go","4Hours","Rs.890/-","40","Rs.17/KM & Rs.2/Min"],
+  ["Chennai","Go","8Hours","Rs.1,490/-","80","Rs.13/KM & Rs.2/Min"],
+  ["Madurai","Red","1Hour","Rs.900/-","10","Rs.17/KM & Rs.2/Min"],
+  ["Madurai","Red","4Hours","Rs.1,200/-","40","Rs.17/KM & Rs.2/Min"],
+  ["Madurai","Red","8Hours","Rs.2,000/-","80","Rs.14/KM & Rs.2/Min"],
+  ["Trichy","Red","1Hour","Rs.880/-","10","Rs.16/KM & Rs.2/Min"],
+  ["Trichy","Red","4Hours","Rs.1,180/-","40","Rs.16/KM & Rs.2/Min"],
+  ["Trichy","Red","8Hours","Rs.1,980/-","80","Rs.13/KM & Rs.2/Min"],
+  ["Salem","Red","1Hour","Rs.860/-","10","Rs.16/KM & Rs.2/Min"],
+  ["Salem","Red","4Hours","Rs.1,160/-","40","Rs.16/KM & Rs.2/Min"],
+];
+
+let hourlyFilter1 = '', hourlyFilter2 = '';
+
+function filterHourlyTable(city) { hourlyFilter1 = city; renderHourlyTable(); }
+function filterHourlyTable2(type) { hourlyFilter2 = type; renderHourlyTable(); }
+
+function renderHourlyTable() {
+  const filtered = hourlyFares.filter(r =>
+    (!hourlyFilter1 || r[0] === hourlyFilter1) &&
+    (!hourlyFilter2 || r[1] === hourlyFilter2)
+  );
+  const tbody = document.getElementById('hourly-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = filtered.map(r => `
+    <tr>
+      <td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td>
+      <td class="highlight-price">${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td>
+    </tr>
+  `).join('');
+}
+
+function buildOnewayAccordion() {
+  const el = document.getElementById('oneway-accordion');
+  if (!el) return;
+  el.innerHTML = Object.entries(onewayFares).map(([key, rows]) => `
+    <div class="accordion-item">
+      <div class="accordion-head" onclick="toggleAcc(this)">${key} <span class="acc-arrow">▼</span></div>
+      <div class="accordion-body">
+        <table class="fare-table">
+          <thead><tr><th>From</th><th>To</th><th>Car Type</th><th>Fare</th><th>KM</th><th>Extra</th></tr></thead>
+          <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table>
+      </div>
+    </div>
+  `).join('');
+}
+
+function buildRoundAccordion() {
+  const el = document.getElementById('round-accordion');
+  if (!el) return;
+  const roundFares = {
+    "Chennai Round Trips": [["Chennai","Coimbatore & Back","Indica","Rs.5,800/-","580","Rs.10/KM"],["Chennai","Madurai & Back","Indica","Rs.5,200/-","520","Rs.10/KM"],["Chennai","Ooty & Back","Indica","Rs.5,000/-","500","Rs.10/KM"]],
+    "Coimbatore Round Trips": [["Coimbatore","Ooty & Back","Indica","Rs.2,200/-","180","Rs.12/KM"],["Coimbatore","Kodaikanal & Back","Indica","Rs.5,400/-","450","Rs.12/KM"]],
+    "Madurai Round Trips": [["Madurai","Rameswaram & Back","Indica","Rs.2,800/-","280","Rs.10/KM"],["Madurai","Kanyakumari & Back","Indica","Rs.3,400/-","340","Rs.10/KM"]],
+  };
+  el.innerHTML = Object.entries(roundFares).map(([key, rows]) => `
+    <div class="accordion-item">
+      <div class="accordion-head" onclick="toggleAcc(this)">${key} <span class="acc-arrow">▼</span></div>
+      <div class="accordion-body">
+        <table class="fare-table">
+          <thead><tr><th>From</th><th>Route</th><th>Car</th><th>Fare</th><th>KM</th><th>Extra</th></tr></thead>
+          <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleAcc(head) {
+  head.classList.toggle('open');
+  const body = head.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+// ── STATE TABS / CITY GRID RENDERING (Cabs dropdown + Bike Taxi dropdown) ──
+let activeState = "Tamil Nadu";
+let activeBikeState = "Tamil Nadu";
+
+function renderStateTabs(tabsId, gridId, current, setterName) {
+  const tabsEl = document.getElementById(tabsId);
+  const gridEl = document.getElementById(gridId);
+  if (!tabsEl || !gridEl) return;
+  tabsEl.innerHTML = stateOrder.map(s => `
+    <button type="button" class="state-tab ${s === current ? 'active' : ''}" onclick="event.stopPropagation();${setterName}('${s.replace(/'/g,"\\'")}')">${s}</button>
+  `).join('');
+  const cities = stateData[current] || [];
+  gridEl.innerHTML = cities.map(key => `
+    <a class="city-link" onclick="event.stopPropagation();showCity('${key}')">${cityLabel(key)}</a>
+  `).join('');
+}
+
+function setActiveState(stateName) {
+  activeState = stateName;
+  renderStateTabs('state-tabs', 'state-city-grid', activeState, 'setActiveState');
+}
+
+function setActiveBikeState(stateName) {
+  activeBikeState = stateName;
+  renderStateTabs('bike-state-tabs', 'bike-state-city-grid', activeBikeState, 'setActiveBikeState');
+}
+
+// ── NAV ──────────────────────────────────────────────────────────────────────
+function toggleDrop(id) {
+  const li = document.getElementById(id);
+  const wasOpen = li.classList.contains('open');
+  closeAllDrops();
+  if (!wasOpen) li.classList.add('open');
+}
+function closeAllDrops() {
+  document.querySelectorAll('.nav-links > li').forEach(li => li.classList.remove('open'));
+}
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.nav-links')) closeAllDrops();
+});
+
+// ── PAGE NAVIGATION ──────────────────────────────────────────────────────────
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id !== 'page-city') stopPkgCarousels();
+  window.scrollTo({ top:0, behavior:'smooth' });
+}
+function showHome() { showPage('page-home'); closeAllDrops(); }
+
+function showCity(cityKey) {
+  closeAllDrops();
+  const data = cityData[cityKey] || { state:"India", name: cityLabel(cityKey), desc:`Explore ${cityLabel(cityKey)} with premium cab packages.`, placesCount:"15" };
+  const packages = data.packages || defaultPackages(data.name);
+  document.getElementById('city-badge').textContent = data.state || 'India';
+  document.getElementById('city-heading').innerHTML = `${data.name} <span>Cab Packages</span>`;
+  document.getElementById('city-desc').textContent = data.desc;
+  document.getElementById('city-places-count').innerHTML = `${data.placesCount}<span>+</span>`;
+  document.getElementById('pkg-section-title').textContent = `${data.name} Tourist Packages`;
+  const grid = document.getElementById('packages-grid');
+  grid.innerHTML = packages.map((pkg,i) => `
+    <div class="pkg-card">
+      <div class="pkg-img" id="pkg-img-${i}">
+        <span class="pkg-badge">${pkg.badge}</span>
+        <div class="pkg-carousel" id="pkg-carousel-${i}">
+          ${pkg.places.map((p,j)=>`
+            <div class="pkg-slide ${j===0?'active':''}" style="background-image:url('https://source.unsplash.com/400x300/?${encodeURIComponent(p+' '+data.name+' india')}')">
+            </div>
+          `).join('')}
+          <span class="pkg-slide-label" id="pkg-slide-label-${i}">📍 ${pkg.places[0]}</span>
+          <div class="pkg-dots">${pkg.places.map((p,j)=>`<span class="pkg-dot ${j===0?'active':''}"></span>`).join('')}</div>
+        </div>
+      </div>
+      <div class="pkg-body">
+        <div class="pkg-pickup-chip">📍 Pickup: ${data.name}</div>
+        <div class="pkg-title">${pkg.title}</div>
+        <div class="pkg-desc">${pkg.desc}</div>
+        <div class="pkg-places">${pkg.places.map(p=>`<span class="pkg-place-tag">📍 ${p}</span>`).join('')}</div>
+        <div class="pkg-footer">
+          <div>
+            <div class="pkg-price-label">Starting from</div>
+            <div class="pkg-price-val">${pkg.price} <span>per cab</span></div>
+            <div class="pkg-meta">
+              <span class="pkg-meta-item">⏱ ${pkg.duration}</span>
+              <span class="pkg-meta-item">👥 Upto ${pkg.seats}</span>
+            </div>
+          </div>
+          <button class="pkg-book-btn" onclick="openBookingModal({title:'${pkg.title.replace(/'/g,"\\'")}',type:'Tourist Package',price:'${pkg.price}',duration:'${pkg.duration}',city:'${data.name}'})">Book Now</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  showPage('page-city');
+  startPkgCarousels(packages);
+}
+
+// ── PACKAGE IMAGE CAROUSELS ──────────────────────────────────────────────────
+let pkgCarouselTimers = [];
+function stopPkgCarousels() {
+  pkgCarouselTimers.forEach(t => clearInterval(t));
+  pkgCarouselTimers = [];
+}
+function startPkgCarousels(packages) {
+  stopPkgCarousels();
+  packages.forEach((pkg, i) => {
+    const carouselEl = document.getElementById(`pkg-carousel-${i}`);
+    if (!carouselEl) return;
+    let idx = 0;
+    const slides = carouselEl.querySelectorAll('.pkg-slide');
+    const dots = carouselEl.querySelectorAll('.pkg-dot');
+    const label = document.getElementById(`pkg-slide-label-${i}`);
+    if (slides.length <= 1) return;
+    const timer = setInterval(() => {
+      idx = (idx + 1) % slides.length;
+      slides.forEach((s,j) => s.classList.toggle('active', j === idx));
+      dots.forEach((d,j) => d.classList.toggle('active', j === idx));
+      if (label) label.textContent = `📍 ${pkg.places[idx]}`;
+    }, 3000);
+    pkgCarouselTimers.push(timer);
+  });
+}
+
+function showTripPage(tab) {
+  showPage('page-trip');
+  const tabMap = {oneway:'Oneway Trip', round:'Round Trip', hourly:'Hourly Rental', bulk:'Bulk Booking'};
+  document.getElementById('trip-page-heading').textContent = tabMap[tab] || 'Trip';
+  document.querySelectorAll('.trip-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.trip-content').forEach(c => c.classList.remove('active'));
+  const tabEl = document.querySelector(`.trip-tab[onclick*="'${tab}'"]`);
+  if (tabEl) tabEl.classList.add('active');
+  const contentEl = document.getElementById(`trip-${tab}`);
+  if (contentEl) contentEl.classList.add('active');
+  buildOnewayAccordion();
+  buildRoundAccordion();
+  renderHourlyTable();
+  closeAllDrops();
+}
+
+function switchTripTab(tab, btn) {
+  document.querySelectorAll('.trip-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.trip-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  const contentEl = document.getElementById(`trip-${tab}`);
+  if (contentEl) contentEl.classList.add('active');
+  document.getElementById('trip-page-heading').textContent = btn.textContent.replace(/[^\w\s]/g,'').trim();
+  if (tab==='oneway') buildOnewayAccordion();
+  if (tab==='round') buildRoundAccordion();
+  if (tab==='hourly') renderHourlyTable();
+}
+
+// ── BOOKING MODAL ──────────────────────────────────────────────────────────
+let currentBookingInfo = {};
+function openBookingModal(info) {
+  currentBookingInfo = info || {};
+  document.getElementById('modal-title').textContent = info.title || 'Book a Ride';
+  document.getElementById('modal-subtitle').textContent = info.price
+    ? `${info.type} · ${info.city || ''} · Starting ${info.price}`
+    : 'Fill in your details and we\'ll confirm your booking';
+
+  const body = document.getElementById('modal-body-content');
+  body.innerHTML = `
+    <div id="modal-form-area">
+      ${info.price ? `<div style="background:var(--light);border-radius:12px;padding:14px 16px;margin-bottom:20px;font-size:0.85rem;color:var(--slate);">
+        <strong style="color:var(--navy);">📦 ${info.title}</strong><br/>
+        ${info.city ? `📍 ${info.city} &nbsp;` : ''}${info.duration ? `⏱ ${info.duration} &nbsp;` : ''}${info.price ? `💰 ${info.price} per cab` : ''}
+      </div>` : ''}
+      <div class="form-row">
+        <div class="form-group"><label>Name *</label><input type="text" id="m-name" placeholder="Your full name"/></div>
+        <div class="form-group"><label>Mobile *</label><input type="tel" id="m-mobile" placeholder="+91 XXXXXXXXXX"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Email</label><input type="email" id="m-email" placeholder="your@email.com"/></div>
+        <div class="form-group"><label>Travel Date *</label><input type="date" id="m-date"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Pickup Location *</label><input type="text" id="m-pickup" placeholder="Pickup address"/></div>
+        <div class="form-group"><label>Drop Location *</label><input type="text" id="m-drop" placeholder="Destination"/></div>
+      </div>
+      <div class="form-row single">
+        <div class="form-group"><label>Comments / Special Requests</label><textarea id="m-comments" placeholder="Any special requirements?"></textarea></div>
+      </div>
+      <button class="modal-submit" onclick="submitModalForm()">Confirm Booking →</button>
+      <p style="text-align:center;margin-top:14px;font-size:0.8rem;color:var(--muted);">Or call us directly at <strong style="color:var(--navy);">+91 9360406621</strong></p>
+    </div>
+    <div class="success-screen" id="modal-success">
+      <div class="success-icon">✅</div>
+      <h3>Booking Request Submitted</h3>
+      <p>Thank you! Our team will call you within 30 minutes to confirm your ride details.</p>
+      <div class="success-ref" id="success-ref-num">TC-000000</div>
+      <button class="modal-submit" style="max-width:220px;margin:0 auto;" onclick="closeBookingModal()">Done</button>
+    </div>
+  `;
+
+  // Pre-fill from booking bar if available
+  const pickup = document.getElementById('bar-pickup');
+  const drop = document.getElementById('bar-drop');
+  const date = document.getElementById('bar-date');
+  if (pickup && pickup.value) document.getElementById('m-pickup').value = pickup.value;
+  if (drop && drop.value) document.getElementById('m-drop').value = drop.value;
+  if (date && date.value) document.getElementById('m-date').value = date.value;
+
+  document.getElementById('bookingModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeBookingModal() {
+  document.getElementById('bookingModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function handleModalOverlayClick(e) {
+  if (e.target === document.getElementById('bookingModal')) closeBookingModal();
+}
+
+function submitModalForm() {
+  const name = document.getElementById('m-name').value.trim();
+  const mobile = document.getElementById('m-mobile').value.trim();
+  const pickup = document.getElementById('m-pickup').value.trim();
+  const date = document.getElementById('m-date').value;
+
+  if (!name || !mobile || !pickup || !date) {
+    alert('Please fill in Name, Mobile, Pickup Location, and Travel Date.');
+    return;
+  }
+
+  // Booking request only (NOT confirmed)
+  const ref = 'TC-' + Math.floor(100000 + Math.random() * 900000);
+
+  document.getElementById('modal-form-area').style.display = 'none';
+
+  const success = document.getElementById('modal-success');
+  success.style.display = 'block';
+
+  document.getElementById('success-ref-num').textContent = ref;
+
+  // Change message
+  const title = success.querySelector('h3');
+  if (title) {
+    title.textContent = 'Booking Request Submitted';
+  }
+
+  const msg = success.querySelector('p');
+  if (msg) {
+    msg.textContent =
+      'Your ride request has been sent to the admin. Booking will be confirmed only after a driver accepts the trip.';
+  }
+}
+
+function handleBookingBarSearch() {
+  const pickup = document.getElementById('bar-pickup').value.trim();
+  const drop = document.getElementById('bar-drop').value.trim();
+  const date = document.getElementById('bar-date').value;
+  if (!pickup && !drop) {
+    alert('Please enter your pickup and drop locations.');
+    return;
+  }
+  openBookingModal({
+    title: 'Cab Search Results',
+    type: 'Oneway Trip',
+  });
+}
+
+function submitTripForm(tripType) {
+  alert(`${tripType} request submitted! Our team will call you shortly to confirm.`);
+}
+
+// ESC key close
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeBookingModal();
+});
+
+// Init
+document.addEventListener('DOMContentLoaded', function() {
+  renderHourlyTable();
+  renderStateTabs('state-tabs', 'state-city-grid', activeState, 'setActiveState');
+  renderStateTabs('bike-state-tabs', 'bike-state-city-grid', activeBikeState, 'setActiveBikeState');
+});
+</script>
+</body>
+</html>
