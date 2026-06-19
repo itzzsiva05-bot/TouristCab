@@ -144,3 +144,7 @@ SITE_URL       = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
 ADMIN_WHATSAPP = os.environ.get('ADMIN_WHATSAPP', '')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+STATIC_URL = 'static/'
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'
