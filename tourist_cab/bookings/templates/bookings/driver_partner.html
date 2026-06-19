@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% block title %}Drive With Us — TouristCab{% endblock %}
+
+{% block extra_head %}
+<style>
+  .driver-hero {
+    background:var(--navy); color:var(--white);
+    padding:5rem 5%;
+    display:grid; grid-template-columns:1fr 1fr; gap:4rem; align-items:center;
+  }
+  .driver-hero .eyebrow { color:var(--amber); font-size:.8rem; font-weight:600; letter-spacing:.15em; text-transform:uppercase; margin-bottom:.75rem; }
+  .driver-hero h1 { font-family:'Syne',sans-serif; font-size:clamp(2rem,4vw,3.25rem); font-weight:800; letter-spacing:-.03em; margin-bottom:1rem; }
+  .driver-hero p { color:var(--grey); line-height:1.75; margin-bottom:2rem; }
+
+  .income-box {
+    background:var(--amber); color:var(--navy);
+    border-radius:12px; padding:2rem;
+    text-align:center;
+  }
+  .income-box .big { font-family:'Syne',sans-serif; font-size:3rem; font-weight:800; }
+  .income-box .sub { font-size:.9rem; font-weight:600; opacity:.8; }
+
+  .benefits { padding:4rem 5%; }
+  .benefits h2 { font-family:'Syne',sans-serif; font-size:1.5rem; font-weight:800; margin-bottom:2rem; }
+  .benefit-card {
+    background:var(--white); border-radius:12px; padding:2rem;
+    box-shadow:0 2px 16px rgba(13,27,42,.07);
+    border-left:4px solid var(--amber);
+  }
+  .benefit-icon { font-size:1.75rem; margin-bottom:.75rem; }
+  .benefit-card h4 { font-family:'Syne',sans-serif; font-weight:700; margin-bottom:.5rem; }
+  .benefit-card p { font-size:.875rem; color:var(--grey); line-height:1.6; }
+
+  .apply-section { padding:0 5% 4rem; display:grid; grid-template-columns:1fr 400px; gap:2.5rem; align-items:start; }
+  
+  .requirements h3 { font-family:'Syne',sans-serif; font-weight:800; margin-bottom:1.25rem; }
+  .req-item { display:flex; gap:.75rem; margin-bottom:1rem; align-items:flex-start; }
+  .req-check { width:22px; height:22px; background:var(--amber); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.8rem; font-weight:700; color:var(--navy); flex-shrink:0; }
+  .req-item p { font-size:.9rem; line-height:1.5; color:var(--navy2); }
+
+  .form-row { margin-bottom:1rem; }
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+
+  @media(max-width:900px){ .driver-hero{grid-template-columns:1fr;} .apply-section{grid-template-columns:1fr;} }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="driver-hero">
+  <div>
+    <p class="eyebrow">Driver Partner Program</p>
+    <h1>Drive with us.<br>Earn on your terms.</h1>
+    <p>Join Chennai's fastest-growing cab network. Flexible hours, guaranteed earnings, and a support team that's always available.</p>
+    <a href="#apply" class="btn">Apply Now — It's Free</a>
+  </div>
+  <div class="income-box">
+    <div class="big">₹45,000</div>
+    <div class="sub">Average monthly earnings</div>
+    <p style="font-size:.85rem;margin-top:1rem;opacity:.75">Top drivers earn ₹65,000+/month with our performance bonus</p>
+  </div>
+</div>
+
+<div class="benefits">
+  <h2>Why partner with TouristCab?</h2>
+  <div class="grid-3">
+    <div class="benefit-card">
+      <div class="benefit-icon">💰</div>
+      <h4>Weekly Payouts</h4>
+      <p>Earnings transferred directly to your bank every Friday — no waiting, no delays.</p>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon">🗓️</div>
+      <h4>Flexible Hours</h4>
+      <p>Work when you want. Full-time or part-time — you set your own schedule.</p>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon">🔧</div>
+      <h4>Free Vehicle Support</h4>
+      <p>Access to partner garages for maintenance at discounted rates.</p>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon">📱</div>
+      <h4>Driver App</h4>
+      <p>Accept rides, track earnings, and contact support from our simple driver app.</p>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon">🛡️</div>
+      <h4>Insurance Cover</h4>
+      <p>Passenger and driver insurance included on all rides booked through TouristCab.</p>
+    </div>
+    <div class="benefit-card">
+      <div class="benefit-icon">🎁</div>
+      <h4>Performance Bonuses</h4>
+      <p>Hit weekly ride targets and earn extra. Top drivers unlock VIP status and premium trips.</p>
+    </div>
+  </div>
+</div>
+
+<div class="apply-section" id="apply">
+  <div class="requirements">
+    <h3>What you need to apply</h3>
+    <div class="req-item"><div class="req-check">✓</div><p>Valid driving licence (LMV) with min. 2 years experience</p></div>
+    <div class="req-item"><div class="req-check">✓</div><p>Own a car (any petrol, diesel, or EV) — 2018 model or newer</p></div>
+    <div class="req-item"><div class="req-check">✓</div><p>Clean background check — we verify before onboarding</p></div>
+    <div class="req-item"><div class="req-check">✓</div><p>Valid vehicle insurance and PUC certificate</p></div>
+    <div class="req-item"><div class="req-check">✓</div><p>Aadhaar card and PAN card for verification</p></div>
+    <div class="req-item"><div class="req-check">✓</div><p>Smartphone with internet connection</p></div>
+  </div>
+
+  <div class="card">
+    <h3 style="font-family:'Syne',sans-serif;font-weight:800;margin-bottom:1.5rem">Apply to Drive</h3>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-grid">
+        <div class="form-row">
+          <label>Full Name</label>
+          <input type="text" name="name" required/>
+        </div>
+        <div class="form-row">
+          <label>Phone Number</label>
+          <input type="tel" name="phone" required/>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Email Address</label>
+        <input type="email" name="email" required/>
+      </div>
+      <div class="form-row">
+        <label>City</label>
+        <select name="city">
+          <option>Chennai</option>
+          <option>Bengaluru</option>
+          <option>Coimbatore</option>
+          <option>Madurai</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Car Model & Year</label>
+        <input type="text" name="car" placeholder="e.g. Maruti Swift 2021"/>
+      </div>
+      <div class="form-row">
+        <label>Years of Driving Experience</label>
+        <select name="experience">
+          <option>2–3 years</option>
+          <option>3–5 years</option>
+          <option>5–10 years</option>
+          <option>10+ years</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Preferred Working Hours</label>
+        <select name="hours">
+          <option>Morning (6 AM – 2 PM)</option>
+          <option>Evening (2 PM – 10 PM)</option>
+          <option>Night (10 PM – 6 AM)</option>
+          <option>Flexible</option>
+        </select>
+      </div>
+      <button type="submit" class="btn" style="width:100%">Submit Application →</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

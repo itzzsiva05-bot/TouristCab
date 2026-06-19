@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Book a Ride — TouristCab</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #1a2540; --amber: #f5a623; --white: #ffffff;
+      --off: #f7f8fa; --border: #e2e6ea; --text: #1a2540;
+      --muted: #6b7280; --radius: 10px; --shadow: 0 2px 12px rgba(0,0,0,.08);
+      --green: #065f46; --green-bg: #f0fdf4; --green-border: #a7f3d0;
+      --red: #b91c1c;   --red-bg: #fff0f0;   --red-border: #f5c6c6;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--text); background: var(--off); line-height: 1.5; }
+    nav { background: var(--navy); padding: .9rem 5%; display: flex; align-items: center; position: sticky; top: 0; z-index: 100; }
+    .nav-logo { color: var(--white); font-size: 1.25rem; font-weight: 700; text-decoration: none; }
+    .nav-logo span { color: var(--amber); }
+    .page-hero { background: var(--navy); color: var(--white); padding: 3.5rem 5% 3rem; }
+    .page-hero h1 { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 700; margin-bottom: .4rem; }
+    .page-hero p  { color: #9baec8; font-size: .95rem; }
+    .booking-layout { display: grid; grid-template-columns: 1fr 360px; gap: 2rem; padding: 2.5rem 5%; max-width: 1200px; margin: 0 auto; }
+    @media (max-width: 820px) { .booking-layout { grid-template-columns: 1fr; } .fare-summary { position: static !important; } }
+    .card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 2rem; }
+    .section-title { font-size: 1rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--navy); margin: 1.6rem 0 1rem; padding-bottom: .4rem; border-bottom: 2px solid var(--amber); }
+    .section-title:first-child { margin-top: 0; }
+    .field { margin-bottom: 1rem; position: relative; }
+    label { display: block; font-size: .82rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .35rem; }
+    input[type="text"], input[type="email"], input[type="tel"], input[type="number"],
+    input[type="date"], input[type="time"], select {
+      width: 100%; padding: .65rem .85rem; border: 1.5px solid var(--border);
+      border-radius: 6px; font-size: .95rem; color: var(--text); background: var(--white);
+      transition: border-color .15s; appearance: none;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,166,35,.15); }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .ac-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--white); border: 1.5px solid var(--amber); border-top: none; border-radius: 0 0 6px 6px; z-index: 50; max-height: 200px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+    .ac-item { padding: .6rem .85rem; font-size: .9rem; cursor: pointer; border-bottom: 1px solid var(--border); }
+    .ac-item:last-child { border-bottom: none; }
+    .ac-item:hover { background: var(--off); }
+    .ac-loading { padding: .6rem .85rem; font-size: .85rem; color: var(--muted); }
+    .btn-location { margin-top: .5rem; background: var(--off); border: 1.5px solid var(--border); border-radius: 6px; padding: .45rem .9rem; font-size: .85rem; font-weight: 600; cursor: pointer; color: var(--navy); transition: background .15s; }
+    .btn-location:hover { background: #edf0f5; }
+    .btn-location:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-submit { display: block; width: 100%; margin-top: 1.6rem; background: var(--amber); color: var(--navy); border: none; border-radius: 8px; padding: .9rem; font-size: 1.05rem; font-weight: 700; cursor: pointer; transition: opacity .15s, transform .1s; }
+    .btn-submit:hover { opacity: .92; }
+    .btn-submit:active { transform: scale(.98); }
+    .btn-otp { background: var(--navy); color: var(--white); border: none; border-radius: 6px; padding: .65rem 1rem; font-size: .85rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: opacity .15s; }
+    .btn-otp:hover { opacity: .85; }
+    .btn-otp:disabled { opacity: .4; cursor: not-allowed; }
+    .banner { display: none; padding: .75rem 1rem; border-radius: 6px; font-size: .9rem; margin-bottom: 1rem; }
+    .banner.error   { background: var(--red-bg);   border: 1px solid var(--red-border);   color: var(--red); }
+    .banner.success { background: var(--green-bg); border: 1px solid var(--green-border); color: var(--green); }
+    .fare-summary { position: sticky; top: 72px; height: fit-content; }
+    .fare-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.5rem; }
+    .fare-card h3 { font-size: .95rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--navy); margin-bottom: 1rem; padding-bottom: .5rem; border-bottom: 2px solid var(--amber); }
+    .fare-row { display: flex; justify-content: space-between; align-items: center; padding: .55rem 0; border-bottom: 1px solid var(--border); font-size: .95rem; }
+    .fare-row:last-child { border-bottom: none; }
+    .fare-row .label { color: var(--muted); }
+    .fare-row.total { font-weight: 700; font-size: 1.15rem; padding-top: .75rem; color: var(--navy); }
+    .fare-row.total .label { color: var(--navy); }
+    #distanceBadge { display: inline-block; background: var(--navy); color: var(--white); border-radius: 20px; padding: .2rem .6rem; font-size: .8rem; font-weight: 600; }
+    .fare-note { margin-top: 1rem; font-size: .78rem; color: var(--muted); text-align: center; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 200; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--white); border-radius: 12px; padding: 2rem; max-width: 440px; width: 90%; box-shadow: 0 8px 40px rgba(0,0,0,.18); }
+    .modal h2 { font-size: 1.3rem; margin-bottom: .5rem; color: var(--navy); }
+    .modal p  { color: var(--muted); font-size: .9rem; margin-bottom: 1.4rem; }
+    .modal-detail { background: var(--off); border-radius: 6px; padding: 1rem; margin-bottom: 1.4rem; font-size: .9rem; line-height: 1.8; }
+    .modal-detail strong { color: var(--navy); }
+    .modal-actions { display: flex; gap: .75rem; }
+    .btn-confirm { flex: 1; background: var(--amber); color: var(--navy); font-weight: 700; padding: .75rem; border: none; border-radius: 7px; cursor: pointer; font-size: .95rem; }
+    .btn-cancel  { flex: 1; background: var(--off);   color: var(--navy); font-weight: 600; padding: .75rem; border: 1.5px solid var(--border); border-radius: 7px; cursor: pointer; font-size: .95rem; }
+    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: 6px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status-wrap { padding: 2.5rem 5%; max-width: 760px; margin: 0 auto; }
+    .countdown-ring { display: flex; flex-direction: column; align-items: center; margin: 1.5rem 0; }
+    .ring-svg { transform: rotate(-90deg); }
+    .ring-bg   { fill: none; stroke: #e2e6ea; stroke-width: 6; }
+    .ring-prog { fill: none; stroke: var(--amber); stroke-width: 6; stroke-linecap: round; transition: stroke-dashoffset .9s linear; }
+    .ring-label { font-size: 1.8rem; font-weight: 700; color: var(--navy); margin-top: .75rem; }
+    .ring-sub   { font-size: .8rem; color: var(--muted); margin-top: .2rem; }
+    .steps { margin: 1.25rem 0; }
+    .step  { display: flex; align-items: center; gap: .75rem; padding: .65rem 0; border-bottom: 1px solid var(--border); }
+    .step:last-child { border-bottom: none; }
+    .step-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .step-dot.done    { background: #22c55e; }
+    .step-dot.active  { background: var(--amber); animation: blink 1.4s infinite; }
+    .step-dot.pending { background: var(--border); }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .step-text { font-size: .9rem; color: var(--muted); }
+    .step-text.done { color: var(--text); font-weight: 500; }
+    .status-pill { display: inline-block; font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: .3rem .8rem; border-radius: 20px; margin-bottom: 1rem; }
+    .pill-waiting   { background: #fff7e6; color: #b45309; }
+    .pill-confirmed { background: var(--green-bg); color: var(--green); }
+    .pill-cancelled { background: var(--red-bg);   color: var(--red); }
+    .driver-card { display: flex; align-items: center; gap: 1rem; background: var(--off); border-radius: var(--radius); padding: 1rem; margin: 1rem 0; border: 1px solid var(--border); }
+    .driver-photo { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--amber); background: var(--border); }
+    .car-photo    { width: 90px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); background: var(--border); }
+    .driver-info  { flex: 1; }
+    .driver-name  { font-weight: 700; font-size: 1rem; color: var(--navy); }
+    .driver-meta  { font-size: .85rem; color: var(--muted); margin-top: .15rem; }
+    .btn-whatsapp { display: flex; align-items: center; justify-content: center; gap: .5rem; width: 100%; padding: .85rem; background: #25d366; color: #fff; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 1rem; text-decoration: none; }
+    .btn-retry { display: block; width: 100%; margin-top: .75rem; padding: .85rem; background: var(--amber); color: var(--navy); border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; text-align: center; }
+    .radar-wrap { display: flex; justify-content: center; margin: 1rem 0; }
+    .radar { width: 80px; height: 80px; border-radius: 50%; border: 2px solid rgba(245,166,35,.35); display: flex; align-items: center; justify-content: center; position: relative; font-size: 2rem; }
+    .radar::before { content:''; position:absolute; inset:-12px; border-radius:50%; border:2px solid rgba(245,166,35,.18); animation: ripple 1.8s infinite; }
+    .radar::after  { content:''; position:absolute; inset:-26px; border-radius:50%; border:2px solid rgba(245,166,35,.09); animation: ripple 1.8s .4s infinite; }
+    @keyframes ripple { 0%{transform:scale(.85);opacity:.8} 100%{transform:scale(1.2);opacity:0} }
+    .live-map-section { margin-top: 1.25rem; }
+    .live-map-header { display: flex; align-items: center; justify-content: space-between; padding: .6rem .9rem; background: var(--navy); border-radius: 8px 8px 0 0; }
+    .live-map-header .map-title { color: var(--white); font-size: .85rem; font-weight: 700; display: flex; align-items: center; gap: .5rem; }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; animation: liveBlink 1.2s infinite; }
+    @keyframes liveBlink { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,.5)} 50%{opacity:.6;box-shadow:0 0 0 5px rgba(34,197,94,0)} }
+    .live-map-header .eta-badge { background: var(--amber); color: var(--navy); font-size: .78rem; font-weight: 700; padding: .2rem .65rem; border-radius: 12px; }
+    #liveMap { width: 100%; height: 300px; border-radius: 0 0 8px 8px; border: 1px solid var(--border); border-top: none; }
+    .map-info-bar { display: flex; gap: .75rem; margin-top: .6rem; }
+    .map-info-chip { flex: 1; background: var(--white); border: 1px solid var(--border); border-radius: 7px; padding: .55rem .75rem; text-align: center; }
+    .map-info-chip .chip-val { font-size: 1.05rem; font-weight: 700; color: var(--navy); }
+    .map-info-chip .chip-lbl { font-size: .72rem; color: var(--muted); margin-top: .1rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="#">Tourist<span>Cab</span></a>
+</nav>
+
+<div class="page-hero">
+  <h1 id="heroTitle">Book Your Ride</h1>
+  <p  id="heroSub">Fill in your trip details and we'll get you moving.</p>
+</div>
+
+<div class="booking-layout" id="bookingLayout">
+  <div class="card">
+    <div id="errorBanner"   class="banner error"></div>
+    <div id="successBanner" class="banner success"></div>
+
+    <form id="bookingForm" novalidate>
+      <div class="section-title">Locations</div>
+      <div class="field" id="pickupField">
+        <label for="pickup">Pickup location</label>
+        <input id="pickup" name="pickup" type="text" required autocomplete="off" placeholder="Start typing an address…">
+        <div class="ac-dropdown" id="pickupDropdown" style="display:none"></div>
+        <button type="button" class="btn-location" id="locBtn" onclick="getLocation()">📍 Use my current location</button>
+      </div>
+      <div class="field" id="dropField">
+        <label for="drop">Drop-off location</label>
+        <input id="drop" name="drop" type="text" required autocomplete="off" placeholder="Where are you headed?">
+        <div class="ac-dropdown" id="dropDropdown" style="display:none"></div>
+      </div>
+
+      <div class="section-title">Select Car</div>
+      <div class="field">
+        <label for="carSelect">Vehicle type</label>
+        <select id="carSelect" name="car_id" required>
+          <option value="1" data-rate="12">Sedan (₹12/km)</option>
+          <option value="2" data-rate="15">SUV (₹15/km)</option>
+          <option value="3" data-rate="10">Hatchback (₹10/km)</option>
+        </select>
+      </div>
+
+      <input type="hidden" name="distance_km" id="distanceInput">
+      <input type="hidden" name="pickup_lat"  id="pickupLat">
+      <input type="hidden" name="pickup_lon"  id="pickupLon">
+      <input type="hidden" name="drop_lat"    id="dropLat">
+      <input type="hidden" name="drop_lon"    id="dropLon">
+
+      <div class="section-title">Trip Details</div>
+      <div class="field-row">
+        <div class="field">
+          <label for="date">Date</label>
+          <input id="date" name="date" type="date" required>
+        </div>
+        <div class="field">
+          <label for="time">Time</label>
+          <input id="time" name="time" type="time" required>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="passengers">Passengers</label>
+          <input id="passengers" name="passengers" type="number" min="1" max="10" placeholder="e.g. 2">
+        </div>
+        <div class="field">
+          <label for="luggage">Luggage pieces</label>
+          <input id="luggage" name="luggage" type="number" min="0" placeholder="e.g. 1">
+        </div>
+      </div>
+
+      <div class="section-title">Your Details</div>
+      <div class="field">
+        <label for="name">Full name</label>
+        <input id="name" name="name" type="text" required placeholder="Your full name">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="phone">Phone (WhatsApp)</label>
+          <div style="display:flex;gap:.5rem;">
+            <input id="phone" name="phone" type="tel" required placeholder="+91XXXXXXXXXX" style="flex:1;" oninput="resetOtp()">
+            <button type="button" id="sendOtpBtn" class="btn-otp" onclick="sendOTP()">Send OTP</button>
+          </div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem;">Enter with country code: +91XXXXXXXXXX</div>
+        </div>
+        <div class="field">
+          <label for="email">Email (optional)</label>
+          <input id="email" name="email" type="email" placeholder="you@example.com">
+        </div>
+      </div>
+
+      <div class="field" id="otpRow" style="display:none;">
+        <label for="otpInput">Enter OTP <span id="otpTimer" style="color:var(--amber);font-size:.8rem;"></span></label>
+        <div style="display:flex;gap:.5rem;">
+          <input id="otpInput" type="text" inputmode="numeric" maxlength="6" placeholder="6-digit OTP" style="flex:1;letter-spacing:.2em;font-size:1.1rem;">
+          <button type="button" class="btn-otp" onclick="verifyOTP()">Verify</button>
+        </div>
+        <div id="otpStatus" style="font-size:.82rem;margin-top:.4rem;"></div>
+      </div>
+
+      <div id="verifiedBadge" style="display:none;margin-bottom:1rem;background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);padding:.5rem .85rem;border-radius:6px;font-size:.88rem;">
+        ✅ Phone number verified
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn" disabled style="opacity:.5;cursor:not-allowed;">
+        Verify phone to continue →
+      </button>
+    </form>
+  </div>
+
+  <div class="fare-summary">
+    <div class="fare-card">
+      <h3>Fare Estimate</h3>
+      <div class="fare-row"><span class="label">Distance</span><span id="distanceBadge">— km</span></div>
+      <div class="fare-row"><span class="label">Base charge</span><span>₹80</span></div>
+      <div class="fare-row"><span class="label">Running cost</span><span id="runningCost">₹0</span></div>
+      <div class="fare-row"><span class="label">Driver allowance</span><span>₹50</span></div>
+      <div class="fare-row"><span class="label">Tax (5%)</span><span id="tax">₹0</span></div>
+      <div class="fare-row total"><span class="label">Total</span><span id="total">₹—</span></div>
+      <p class="fare-note">Fare updates once both locations are set.</p>
+    </div>
+  </div>
+</div>
+
+<div class="status-wrap" id="statusCard" style="display:none;">
+  <div class="card">
+    <div id="statusWaiting">
+      <div class="section-title" style="margin-top:0;">Booking Status</div>
+      <span class="status-pill pill-waiting">⏳ Waiting for driver</span>
+      <div class="radar-wrap"><div class="radar">🚖</div></div>
+      <p style="text-align:center;color:var(--muted);margin-bottom:1.5rem;">Searching for a nearby driver… Hang tight!</p>
+      <div class="countdown-ring">
+        <svg class="ring-svg" width="100" height="100" viewBox="0 0 100 100">
+          <circle class="ring-bg"   cx="50" cy="50" r="44"/>
+          <circle class="ring-prog" cx="50" cy="50" r="44" id="ringProg" stroke-dasharray="276.46" stroke-dashoffset="0"/>
+        </svg>
+        <div class="ring-label" id="timerLabel">10:00</div>
+        <div class="ring-sub">Auto-cancels if no driver accepts</div>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="step-dot done"></div><span class="step-text done">Booking confirmed & sent to drivers</span></div>
+        <div class="step"><div class="step-dot active"></div><span class="step-text">Waiting for driver to accept</span></div>
+        <div class="step"><div class="step-dot pending"></div><span class="step-text" style="color:#d1d5db;">Driver details sent to your WhatsApp</span></div>
+      </div>
+    </div>
+
+    <div id="statusCancelled" style="display:none;text-align:center;padding:1rem 0;">
+      <div style="font-size:3rem;margin-bottom:.75rem;">😔</div>
+      <span class="status-pill pill-cancelled">Ride Cancelled</span>
+      <p style="color:var(--muted);margin-bottom:1.5rem;" id="cancelMsg">No driver accepted your ride within 10 minutes.<br>Our team will contact you on WhatsApp shortly.</p>
+      <button class="btn-retry" onclick="retryBooking()">🔄 Try booking again</button>
+      <a class="btn-whatsapp" href="https://wa.me/919360406621" target="_blank">💬 Contact support on WhatsApp</a>
+    </div>
+
+    <div id="statusConfirmed" style="display:none;">
+      <div class="section-title" style="margin-top:0;">Booking Status</div>
+      <span class="status-pill pill-confirmed">✅ Driver Confirmed!</span>
+      <div class="driver-card">
+        <img id="driverPhoto" class="driver-photo" src="" alt="Driver">
+        <div class="driver-info">
+          <div class="driver-name" id="confDriverName">—</div>
+          <div class="driver-meta" id="confDriverPhone">—</div>
+          <div class="driver-meta" id="confCarName" style="margin-top:.2rem;"></div>
+        </div>
+        <img id="carPhoto" class="car-photo" src="" alt="Car">
+      </div>
+      <div class="fare-row"><span class="label">Vehicle number</span><span id="confVehicle">—</span></div>
+      <div class="steps" style="margin-top:1rem;">
+        <div class="step"><div class="step-dot done"></div><span class="step-text done">Booking confirmed</span></div>
+        <div class="step"><div class="step-dot done"></div><span class="step-text done">Driver accepted your ride</span></div>
+        <div class="step"><div class="step-dot active"></div><span class="step-text">Driver is on the way to you</span></div>
+      </div>
+      <div class="live-map-section">
+        <div class="live-map-header">
+          <span class="map-title"><span class="live-dot"></span>Live Driver Location</span>
+          <span class="eta-badge" id="etaBadge">ETA: —</span>
+        </div>
+        <div id="liveMap"></div>
+        <div class="map-info-bar">
+          <div class="map-info-chip"><div class="chip-val" id="chipDistance">—</div><div class="chip-lbl">Distance away</div></div>
+          <div class="map-info-chip"><div class="chip-val" id="chipEta">—</div><div class="chip-lbl">ETA to pickup</div></div>
+          <div class="map-info-chip"><div class="chip-val" id="chipSpeed">—</div><div class="chip-lbl">Speed</div></div>
+        </div>
+      </div>
+      <a class="btn-whatsapp" id="driverWhatsApp" href="#" target="_blank" style="margin-top:1.25rem;">💬 Message driver on WhatsApp</a>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal">
+    <h2>Confirm your booking</h2>
+    <p>Please review the details before we lock in your ride.</p>
+    <div class="modal-detail" id="modalDetail"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel"  onclick="closeModal()">Go back</button>
+      <button class="btn-confirm" id="confirmBtn" onclick="submitBooking()">Yes, book this ride</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const state = { pickup: { lat: null, lon: null, label: "" }, drop: { lat: null, lon: null, label: "" } };
+let distanceKm = 0, currentFare = {};
+const BASE = 80, DRIVER_ALLOWANCE = 50, TAX_PCT = 0.05;
+
+let acTimers = {};
+function setupAutocomplete(inputId, dropdownId, stateKey) {
+  const input = document.getElementById(inputId);
+  const dd    = document.getElementById(dropdownId);
+  input.addEventListener("input", () => {
+    clearTimeout(acTimers[inputId]);
+    state[stateKey] = { lat: null, lon: null, label: "" };
+    document.getElementById(stateKey + "Lat").value = "";
+    document.getElementById(stateKey + "Lon").value = "";
+    const q = input.value.trim();
+    if (q.length < 3) { dd.style.display = "none"; return; }
+    acTimers[inputId] = setTimeout(async () => {
+      dd.innerHTML = '<div class="ac-loading">Searching…</div>';
+      dd.style.display = "block";
+      try {
+        const res  = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&q=${encodeURIComponent(q)}`, { headers: { "Accept-Language": "en" } });
+        let data = await res.json();
+        data.sort((a, b) => { const g = ["city","town","village","hamlet","suburb"]; return (g.includes(a.type)?0:1) - (g.includes(b.type)?0:1); });
+        if (!data.length) { dd.innerHTML = '<div class="ac-loading">No results.</div>'; return; }
+        dd.innerHTML = "";
+        data.forEach(p => {
+          const item = document.createElement("div");
+          item.className = "ac-item";
+          item.textContent = p.display_name;
+          item.addEventListener("mousedown", e => {
+            e.preventDefault();
+            input.value = p.display_name;
+            state[stateKey] = { lat: parseFloat(p.lat), lon: parseFloat(p.lon), label: p.display_name };
+            dd.style.display = "none";
+            document.getElementById(stateKey + "Lat").value = p.lat;
+            document.getElementById(stateKey + "Lon").value = p.lon;
+            calculateDistance();
+          });
+          dd.appendChild(item);
+        });
+      } catch { dd.innerHTML = '<div class="ac-loading">Search failed.</div>'; }
+    }, 400);
+  });
+  input.addEventListener("blur", () => setTimeout(() => { dd.style.display = "none"; }, 150));
+}
+setupAutocomplete("pickup", "pickupDropdown", "pickup");
+setupAutocomplete("drop",   "dropDropdown",   "drop");
+
+async function getLocation() {
+  if (!navigator.geolocation) { showError("Geolocation not supported."); return; }
+  const btn = document.getElementById("locBtn");
+  btn.disabled = true; btn.textContent = "⏳ Detecting…";
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const { latitude: lat, longitude: lon } = pos.coords;
+    try {
+      const res  = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`, { headers: { "Accept-Language": "en" } });
+      const data = await res.json();
+      const label = data.display_name || `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+      document.getElementById("pickup").value = label;
+      state.pickup = { lat, lon, label };
+      document.getElementById("pickupLat").value = lat;
+      document.getElementById("pickupLon").value = lon;
+      calculateDistance();
+    } catch { showError("Couldn't detect location."); }
+    finally { btn.disabled = false; btn.textContent = "📍 Use my current location"; }
+  }, () => { showError("Location denied. Type an address."); btn.disabled = false; btn.textContent = "📍 Use my current location"; });
+}
+
+function haversine(lat1,lon1,lat2,lon2) {
+  const R=6371, dL=(lat2-lat1)*Math.PI/180, dG=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dL/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dG/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+async function calculateDistance() {
+  const p=state.pickup, d=state.drop;
+  if (!p.lat || !d.lat) return;
+  try {
+    const res  = await fetch(`https://router.project-osrm.org/route/v1/driving/${p.lon},${p.lat};${d.lon},${d.lat}?overview=false`);
+    const data = await res.json();
+    distanceKm = (data.code==="Ok" && data.routes?.length) ? data.routes[0].distance/1000 : haversine(p.lat,p.lon,d.lat,d.lon);
+  } catch { distanceKm = haversine(p.lat,p.lon,d.lat,d.lon); }
+  document.getElementById("distanceBadge").textContent = distanceKm.toFixed(2)+" km";
+  document.getElementById("distanceInput").value       = distanceKm.toFixed(2);
+  clearError(); updateFare();
+}
+function updateFare() {
+  const sel     = document.getElementById("carSelect");
+  const rate    = parseFloat(sel.selectedOptions[0]?.dataset.rate) || 12;
+  const running = distanceKm * rate;
+  const subtotal= BASE + running + DRIVER_ALLOWANCE;
+  const tax     = subtotal * TAX_PCT;
+  const total   = subtotal + tax;
+  document.getElementById("runningCost").textContent = "₹"+running.toFixed(0);
+  document.getElementById("tax").textContent         = "₹"+tax.toFixed(0);
+  document.getElementById("total").textContent       = "₹"+total.toFixed(0);
+  currentFare = { rate, running, subtotal, tax, total };
+  return currentFare;
+}
+document.getElementById("carSelect").addEventListener("change", updateFare);
+
+/* ── FORM → MODAL (bug fixed: const f declared first) ── */
+document.getElementById("bookingForm").addEventListener("submit", e => {
+  e.preventDefault();
+  const f = e.target;
+
+  if (!otpVerified) { showError("Phone number verify பண்ணணும் before booking."); return; }
+  clearError();
+  if (!state.pickup.lat || !state.drop.lat) { showError("Please select pickup and drop-off from the suggestions."); return; }
+  if (distanceKm <= 0) { showError("Distance could not be calculated. Re-select locations."); return; }
+  if (!f.date.value) { showError("Please select a date."); return; }
+  if (!f.time.value) { showError("Please select a time."); return; }
+
+  const fare = updateFare(), car = document.getElementById("carSelect").selectedOptions[0]?.text || "—";
+  document.getElementById("modalDetail").innerHTML = `
+    <strong>Pickup:</strong> ${f.pickup.value}<br>
+    <strong>Drop-off:</strong> ${f.drop.value}<br>
+    <strong>Vehicle:</strong> ${car}<br>
+    <strong>Distance:</strong> ${distanceKm.toFixed(2)} km<br>
+    <strong>Date & Time:</strong> ${f.date.value} at ${f.time.value}<br>
+    <strong>Passengers:</strong> ${f.passengers.value||"—"} &nbsp;|&nbsp; <strong>Luggage:</strong> ${f.luggage.value||"—"}<br>
+    <strong>Name:</strong> ${f.name.value}<br>
+    <strong>Phone:</strong> ${f.phone.value}<br><br>
+    <strong>Total Fare: ₹${fare.total.toFixed(0)}</strong>
+  `;
+  document.getElementById("confirmModal").classList.add("open");
+}, true);
+
+function closeModal() { document.getElementById("confirmModal").classList.remove("open"); }
+
+async function submitBooking() {
+  const confirmBtn = document.getElementById("confirmBtn");
+  confirmBtn.disabled = true;
+  confirmBtn.innerHTML = '<span class="spinner"></span>Booking…';
+  const f = document.getElementById("bookingForm"), fare = updateFare();
+  const payload = {
+    name: f.name.value, phone: f.phone.value, email: f.email.value,
+    pickup: f.pickup.value, drop: f.drop.value,
+    pickup_lat: document.getElementById("pickupLat").value,
+    pickup_lon: document.getElementById("pickupLon").value,
+    drop_lat:   document.getElementById("dropLat").value,
+    drop_lon:   document.getElementById("dropLon").value,
+    distance_km: distanceKm.toFixed(2),
+    date: f.date.value, time: f.time.value,
+    passengers: f.passengers.value||1, luggage: f.luggage.value||0,
+    car_id: document.getElementById("carSelect").value,
+    total_fare: fare.total.toFixed(0),
+  };
+  closeModal();
+  try {
+    const res  = await fetch("/bookings/submit/", { method:"POST", headers:{"Content-Type":"application/json","X-CSRFToken":getCsrf()}, body:JSON.stringify(payload) });
+    const data = await res.json();
+    if (data.ok) {
+      startStatusPolling(data.booking_id);
+    } else {
+      showError(data.error || "Booking failed. Please try again.");
+      confirmBtn.disabled = false; confirmBtn.textContent = "Yes, book this ride";
+    }
+  } catch {
+    showError("Server எட்டல. Network check பண்ணுங்க.");
+    confirmBtn.disabled = false; confirmBtn.textContent = "Yes, book this ride";
+  }
+}
+
+let statusPoller = null, timerInterval = null, secondsLeft = 600;
+const RING_CIRCUMFERENCE = 276.46;
+
+function startStatusPolling(bookingId) {
+  document.getElementById("bookingLayout").style.display = "none";
+  document.getElementById("statusCard").style.display    = "block";
+  document.getElementById("heroTitle").textContent = "Finding Your Driver";
+  document.getElementById("heroSub").textContent   = "Sit tight — we're matching you with a nearby driver.";
+  showState("waiting");
+  secondsLeft = 600;
+  updateCountdown();
+  timerInterval = setInterval(() => { secondsLeft--; updateCountdown(); if (secondsLeft <= 0) clearInterval(timerInterval); }, 1000);
+  clearInterval(statusPoller);
+  fetchStatus(bookingId);
+  statusPoller = setInterval(() => fetchStatus(bookingId), 4000);
+}
+
+function updateCountdown() {
+  const m = Math.floor(secondsLeft / 60), s = secondsLeft % 60;
+  document.getElementById("timerLabel").textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  const offset = RING_CIRCUMFERENCE * (1 - secondsLeft / 600);
+  document.getElementById("ringProg").style.strokeDashoffset = offset;
+  document.getElementById("ringProg").style.stroke = secondsLeft < 120 ? "#ef4444" : "#f5a623";
+}
+
+async function fetchStatus(bookingId) {
+  try {
+    const res  = await fetch(`/bookings/status/${bookingId}/`);
+    const data = await res.json();
+    if (!data.ok) return;
+    if (data.status === "confirmed" || data.status === "completed") {
+      clearInterval(statusPoller); clearInterval(timerInterval);
+      showState("confirmed"); fillConfirmedState(data); startLiveTracking(bookingId, data);
+    } else if (data.status === "cancelled" || data.status === "rejected") {
+      clearInterval(statusPoller); clearInterval(timerInterval);
+      showState("cancelled");
+      document.getElementById("cancelMsg").innerHTML = data.status === "rejected"
+        ? "The driver couldn't take this ride.<br>Our team will contact you on WhatsApp shortly."
+        : "No driver accepted your ride within 10 minutes.<br>Your booking has been auto-cancelled.<br>Our team will contact you on WhatsApp shortly.";
+    }
+  } catch { }
+}
+
+function showState(s) {
+  document.getElementById("statusWaiting").style.display   = s === "waiting"   ? "block" : "none";
+  document.getElementById("statusCancelled").style.display = s === "cancelled" ? "block" : "none";
+  document.getElementById("statusConfirmed").style.display = s === "confirmed" ? "block" : "none";
+}
+
+function fillConfirmedState(data) {
+  document.getElementById("heroTitle").textContent = "Driver Found! 🎉";
+  document.getElementById("heroSub").textContent   = "Your ride is confirmed. Safe travels!";
+  document.getElementById("driverPhoto").src             = data.driver_photo_url || "";
+  document.getElementById("carPhoto").src                = data.car_photo_url    || "";
+  document.getElementById("confDriverName").textContent  = data.driver_name      || "—";
+  document.getElementById("confDriverPhone").textContent = data.driver_phone     || "—";
+  document.getElementById("confCarName").textContent     = data.car_name         || "—";
+  document.getElementById("confVehicle").textContent     = data.vehicle_number   || "—";
+  const dp = (data.driver_phone || "").replace(/\D/g,"");
+  document.getElementById("driverWhatsApp").href = `https://wa.me/${dp}`;
+}
+
+function retryBooking() {
+  clearInterval(statusPoller); clearInterval(timerInterval); stopLiveTracking();
+  document.getElementById("statusCard").style.display    = "none";
+  document.getElementById("bookingLayout").style.display = "grid";
+  document.getElementById("heroTitle").textContent = "Book Your Ride";
+  document.getElementById("heroSub").textContent   = "Fill in your trip details and we'll get you moving.";
+}
+
+let liveMap = null, driverMarker = null, pickupMarker = null, routeLine = null, locationPoller = null;
+
+const CAR_ICON = L.divIcon({
+  className: "",
+  html: `<div style="background:#1a2540;color:#f5a623;border-radius:50%;width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-size:20px;border:2px solid #f5a623;box-shadow:0 2px 8px rgba(0,0,0,.35);">🚖</div>`,
+  iconSize: [38,38], iconAnchor: [19,19], popupAnchor: [0,-20],
+});
+const PICKUP_ICON = L.divIcon({
+  className: "",
+  html: `<div style="background:#f5a623;color:#1a2540;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:17px;border:2px solid #1a2540;box-shadow:0 2px 8px rgba(0,0,0,.3);">📍</div>`,
+  iconSize: [32,32], iconAnchor: [16,16],
+});
+
+function initMap(driverLat, driverLon) {
+  if (liveMap) return;
+  liveMap = L.map("liveMap", { zoomControl: true, attributionControl: false });
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(liveMap);
+  driverMarker = L.marker([driverLat, driverLon], { icon: CAR_ICON }).addTo(liveMap).bindPopup("🚖 Your driver");
+  const pLat = parseFloat(document.getElementById("pickupLat").value);
+  const pLon = parseFloat(document.getElementById("pickupLon").value);
+  if (pLat && pLon) {
+    pickupMarker = L.marker([pLat, pLon], { icon: PICKUP_ICON }).addTo(liveMap).bindPopup("📍 Your pickup point");
+    liveMap.fitBounds([[driverLat, driverLon], [pLat, pLon]], { padding: [30,30] });
+    drawRoute(driverLat, driverLon, pLat, pLon);
+  } else { liveMap.setView([driverLat, driverLon], 15); }
+}
+
+async function drawRoute(fromLat, fromLon, toLat, toLon) {
+  try {
+    const res  = await fetch(`https://router.project-osrm.org/route/v1/driving/${fromLon},${fromLat};${toLon},${toLat}?overview=full&geometries=geojson`);
+    const data = await res.json();
+    if (data.code === "Ok" && data.routes?.length) {
+      if (routeLine) liveMap.removeLayer(routeLine);
+      const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+      routeLine = L.polyline(coords, { color: "#f5a623", weight: 4, opacity: .8, dashArray: "8 6" }).addTo(liveMap);
+    }
+  } catch { }
+}
+
+function updateDriverMarker(lat, lon, heading) {
+  if (!driverMarker) return;
+  driverMarker.setLatLng([lat, lon]);
+  if (heading !== undefined) { const el = driverMarker.getElement(); if (el) el.style.transform += ` rotate(${heading}deg)`; }
+  const pLat = parseFloat(document.getElementById("pickupLat").value);
+  const pLon = parseFloat(document.getElementById("pickupLon").value);
+  if (pLat && pLon) drawRoute(lat, lon, pLat, pLon);
+}
+
+function updateChips(data) {
+  if (data.distance_meters !== undefined) {
+    const dm = data.distance_meters;
+    document.getElementById("chipDistance").textContent = dm >= 1000 ? (dm/1000).toFixed(1)+" km" : dm.toFixed(0)+" m";
+  }
+  if (data.eta_seconds !== undefined) {
+    const m = Math.ceil(data.eta_seconds / 60), etaTxt = m <= 1 ? "< 1 min" : `${m} min`;
+    document.getElementById("chipEta").textContent  = etaTxt;
+    document.getElementById("etaBadge").textContent = `ETA: ${etaTxt}`;
+  }
+  if (data.speed_kmh !== undefined) document.getElementById("chipSpeed").textContent = data.speed_kmh.toFixed(0)+" km/h";
+}
+
+async function fetchDriverLocation(bookingId) {
+  try {
+    const res  = await fetch(`/bookings/driver-location/${bookingId}/`);
+    const data = await res.json();
+    if (!data.ok || !data.lat || !data.lon) return;
+    if (!liveMap) { initMap(data.lat, data.lon); } else { updateDriverMarker(data.lat, data.lon, data.heading); }
+    updateChips(data);
+  } catch { }
+}
+
+function startLiveTracking(bookingId, confirmedData) {
+  if (confirmedData.driver_lat && confirmedData.driver_lon) {
+    initMap(confirmedData.driver_lat, confirmedData.driver_lon);
+    updateChips({ distance_meters: confirmedData.distance_meters, eta_seconds: confirmedData.eta_seconds, speed_kmh: confirmedData.speed_kmh });
+  } else { fetchDriverLocation(bookingId); }
+  clearInterval(locationPoller);
+  locationPoller = setInterval(() => fetchDriverLocation(bookingId), 5000);
+}
+
+function stopLiveTracking() {
+  clearInterval(locationPoller);
+  if (liveMap) { liveMap.remove(); liveMap = null; driverMarker = null; pickupMarker = null; routeLine = null; }
+}
+
+let otpVerified = false, otpCountdown = null, otpSeconds = 0;
+function resetOtp() {
+  otpVerified = false;
+  document.getElementById("otpRow").style.display        = "none";
+  document.getElementById("verifiedBadge").style.display = "none";
+  document.getElementById("otpStatus").textContent       = "";
+  document.getElementById("otpInput").value              = "";
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true; btn.style.opacity = ".5"; btn.style.cursor = "not-allowed";
+  btn.textContent = "Verify phone to continue →";
+  clearInterval(otpCountdown);
+  document.getElementById("otpTimer").textContent = "";
+}
+async function sendOTP() {
+  const phone = document.getElementById("phone").value.trim();
+  if (!phone) { showError("Phone number enter பண்ணுங்க."); return; }
+  const btn = document.getElementById("sendOtpBtn");
+  btn.disabled = true; btn.textContent = "Sending…";
+  try {
+    const res  = await fetch("/bookings/send-otp/", { method:"POST", headers:{"Content-Type":"application/json","X-CSRFToken":getCsrf()}, body:JSON.stringify({phone}) });
+    const data = await res.json();
+    if (data.ok) {
+      document.getElementById("otpRow").style.display = "block";
+      document.getElementById("otpStatus").style.color = "var(--muted)";
+      document.getElementById("otpStatus").textContent = "OTP sent to " + phone + " via WhatsApp";
+      startOtpTimer(120);
+      btn.textContent = "Resend OTP";
+    } else { showError(data.error || "OTP send பண்ண முடியல."); btn.disabled = false; btn.textContent = "Send OTP"; }
+  } catch { showError("Server எட்டல."); btn.disabled = false; btn.textContent = "Send OTP"; }
+  setTimeout(() => { btn.disabled = false; }, 30000);
+}
+async function verifyOTP() {
+  const phone = document.getElementById("phone").value.trim();
+  const otp   = document.getElementById("otpInput").value.trim();
+  if (otp.length !== 6) { document.getElementById("otpStatus").style.color="#b91c1c"; document.getElementById("otpStatus").textContent="6-digit OTP enter பண்ணுங்க."; return; }
+  try {
+    const res  = await fetch("/bookings/verify-otp/", { method:"POST", headers:{"Content-Type":"application/json","X-CSRFToken":getCsrf()}, body:JSON.stringify({phone,otp}) });
+    const data = await res.json();
+    if (data.ok) {
+      otpVerified = true; clearInterval(otpCountdown);
+      document.getElementById("otpRow").style.display        = "none";
+      document.getElementById("verifiedBadge").style.display = "block";
+      const btn = document.getElementById("submitBtn");
+      btn.disabled = false; btn.style.opacity = "1"; btn.style.cursor = "pointer";
+      btn.textContent = "Review & Confirm Booking →";
+    } else { document.getElementById("otpStatus").style.color="#b91c1c"; document.getElementById("otpStatus").textContent=data.error||"Wrong OTP."; }
+  } catch { document.getElementById("otpStatus").style.color="#b91c1c"; document.getElementById("otpStatus").textContent="Verification failed."; }
+}
+function startOtpTimer(seconds) {
+  clearInterval(otpCountdown); otpSeconds = seconds;
+  const el = document.getElementById("otpTimer");
+  el.textContent = `(expires in ${otpSeconds}s)`;
+  otpCountdown = setInterval(() => {
+    otpSeconds--;
+    if (otpSeconds <= 0) { clearInterval(otpCountdown); el.textContent = "(expired — resend OTP)"; document.getElementById("otpInput").disabled = true; }
+    else { el.textContent = `(expires in ${otpSeconds}s)`; }
+  }, 1000);
+}
+
+function getCsrf() { return document.cookie.split(";").find(c=>c.trim().startsWith("csrftoken="))?.split("=")[1]||""; }
+function showError(msg) { const b=document.getElementById("errorBanner"); b.textContent=msg; b.style.display="block"; b.scrollIntoView({behavior:"smooth",block:"nearest"}); }
+function clearError() { document.getElementById("errorBanner").style.display="none"; }
+function showSuccess(msg) { const b=document.getElementById("successBanner"); b.textContent=msg; b.style.display="block"; setTimeout(()=>{b.style.display="none";},8000); }
+
+document.getElementById("date").min = new Date().toISOString().split("T")[0];
+</script>
+</body>
+</html>

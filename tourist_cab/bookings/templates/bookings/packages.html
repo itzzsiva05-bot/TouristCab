@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tourist Packages – TouristCab</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:   #0A1628;
+      --navy2:  #132040;
+      --gold:   #F5A623;
+      --gold2:  #E8941A;
+      --white:  #FFFFFF;
+      --slate:  #4A5568;
+      --light:  #F7F9FC;
+      --muted:  #8898AA;
+      --radius: 14px;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--white);
+      color: var(--navy);
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 6%;
+      background: rgba(10,22,40,0.92);
+      backdrop-filter: blur(12px);
+    }
+    .logo {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 800; font-size: 1.5rem;
+      color: var(--white); letter-spacing: -0.5px;
+      text-decoration: none;
+    }
+    .logo span { color: var(--gold); }
+    .nav-links { display: flex; gap: 32px; list-style: none; }
+    .nav-links a {
+      color: rgba(255,255,255,0.75);
+      text-decoration: none; font-size: 0.9rem; font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--gold); }
+    .nav-cta {
+      background: var(--gold); color: var(--navy);
+      padding: 10px 24px; border-radius: 50px;
+      font-weight: 700; font-size: 0.9rem; text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .nav-cta:hover { background: var(--gold2); transform: translateY(-1px); }
+
+    /* PAGE HERO */
+    .page-hero {
+      padding: 130px 6% 70px;
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 60%, #1a2f5a 100%);
+      position: relative; overflow: hidden;
+      text-align: center;
+    }
+    .page-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 70% 60% at 50% 100%, rgba(245,166,35,0.1) 0%, transparent 70%);
+    }
+    .page-hero-content { position: relative; z-index: 2; }
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(245,166,35,0.15); border: 1px solid rgba(245,166,35,0.3);
+      color: var(--gold); padding: 6px 18px; border-radius: 50px;
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 1px;
+      text-transform: uppercase; margin-bottom: 20px;
+    }
+    .page-hero h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      font-weight: 800; color: var(--white); line-height: 1.15;
+      margin-bottom: 16px;
+    }
+    .page-hero h1 em { font-style: normal; color: var(--gold); }
+    .page-hero p {
+      color: rgba(255,255,255,0.6); font-size: 1.05rem;
+      max-width: 520px; margin: 0 auto 36px; line-height: 1.7;
+    }
+
+    /* Filter tabs */
+    .filter-tabs {
+      display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 9px 22px; border-radius: 50px;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      background: transparent; color: rgba(255,255,255,0.7);
+      font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+    }
+    .tab-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .tab-btn.active {
+      background: var(--gold); color: var(--navy);
+      border-color: var(--gold);
+    }
+
+    /* PACKAGES GRID */
+    .packages-section { padding: 72px 6%; background: var(--light); }
+    .packages-inner { max-width: 1140px; margin: 0 auto; }
+
+    .section-header {
+      display: flex; justify-content: space-between; align-items: flex-end;
+      margin-bottom: 40px; flex-wrap: wrap; gap: 16px;
+    }
+    .section-header h2 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.6rem; font-weight: 800; color: var(--navy);
+    }
+    .result-count { font-size: 0.85rem; color: var(--muted); }
+    .result-count span { color: var(--gold); font-weight: 700; }
+
+    .packages-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+      gap: 28px;
+    }
+
+    .pkg-card {
+      background: var(--white); border-radius: 20px;
+      overflow: hidden; border: 1.5px solid #E8EDF5;
+      transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+      cursor: pointer; text-decoration: none; color: inherit;
+      display: flex; flex-direction: column;
+    }
+    .pkg-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 48px rgba(10,22,40,0.12);
+      border-color: var(--gold);
+    }
+
+    /* Card image area */
+    .pkg-img {
+      height: 200px; position: relative; overflow: hidden;
+      background: var(--navy2);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .pkg-img svg { width: 100%; height: 100%; }
+    .pkg-badge {
+      position: absolute; top: 14px; left: 14px;
+      padding: 5px 12px; border-radius: 50px;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .badge-popular { background: var(--gold); color: var(--navy); }
+    .badge-new     { background: #22C55E; color: #fff; }
+    .badge-value   { background: #6366F1; color: #fff; }
+    .badge-cab     { background: #0ea5e9; color: #fff; }
+    .badge-trending{ background: #ef4444; color: #fff; }
+    .badge-family  { background: #a855f7; color: #fff; }
+
+    .pkg-days {
+      position: absolute; top: 14px; right: 14px;
+      background: rgba(10,22,40,0.75); backdrop-filter: blur(6px);
+      color: var(--white); padding: 5px 12px; border-radius: 50px;
+      font-size: 0.78rem; font-weight: 600;
+    }
+
+    /* Card body */
+    .pkg-body { padding: 24px; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+    .pkg-location {
+      font-size: 0.75rem; font-weight: 700; color: var(--gold);
+      text-transform: uppercase; letter-spacing: 0.8px;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .pkg-body h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.15rem; font-weight: 700; color: var(--navy); line-height: 1.3;
+    }
+    .pkg-body p { font-size: 0.87rem; color: var(--slate); line-height: 1.6; }
+
+    .pkg-highlights {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px;
+    }
+    .highlight-tag {
+      background: var(--light); border: 1px solid #E2E8F0;
+      padding: 4px 10px; border-radius: 50px;
+      font-size: 0.75rem; color: var(--slate); font-weight: 500;
+    }
+
+    .pkg-footer {
+      padding: 18px 24px;
+      border-top: 1px solid #F0F4F8;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .price-label { font-size: 0.72rem; color: var(--muted); }
+    .price-val {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.4rem; font-weight: 800; color: var(--navy);
+      line-height: 1;
+    }
+    .price-val span { font-size: 0.85rem; color: var(--muted); font-weight: 400; }
+    .pkg-book-btn {
+      background: var(--gold); color: var(--navy);
+      padding: 10px 20px; border-radius: 50px;
+      font-weight: 700; font-size: 0.85rem;
+      border: none; cursor: pointer; font-family: 'Inter', sans-serif;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .pkg-book-btn:hover { background: var(--gold2); transform: translateY(-1px); }
+
+    /* Section divider label */
+    .section-label {
+      grid-column: 1 / -1;
+      display: flex; align-items: center; gap: 16px;
+      margin: 12px 0 4px;
+    }
+    .section-label span {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1rem; font-weight: 700; color: var(--navy);
+      white-space: nowrap;
+    }
+    .section-label::before, .section-label::after {
+      content: ''; flex: 1; height: 1.5px; background: #E2E8F0;
+    }
+
+    /* CUSTOM PACKAGE BANNER */
+    .custom-banner {
+      margin-top: 56px;
+      background: linear-gradient(135deg, var(--navy) 0%, #1a2f5a 100%);
+      border-radius: 24px; padding: 52px 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 32px; flex-wrap: wrap;
+    }
+    .custom-banner h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.7rem; font-weight: 800; color: var(--white); margin-bottom: 10px;
+    }
+    .custom-banner h3 span { color: var(--gold); }
+    .custom-banner p { color: rgba(255,255,255,0.55); font-size: 0.95rem; max-width: 460px; line-height: 1.6; }
+    .banner-actions { display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn-gold {
+      background: var(--gold); color: var(--navy);
+      padding: 13px 28px; border-radius: 50px;
+      font-weight: 700; font-size: 0.95rem; text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+      white-space: nowrap;
+    }
+    .btn-gold:hover { background: var(--gold2); transform: translateY(-1px); }
+    .btn-outline {
+      background: transparent; color: var(--white);
+      padding: 13px 28px; border-radius: 50px;
+      font-weight: 600; font-size: 0.95rem; text-decoration: none;
+      border: 1.5px solid rgba(255,255,255,0.25);
+      transition: border-color 0.2s;
+      white-space: nowrap;
+    }
+    .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* TRUST STRIP */
+    .trust-strip {
+      background: var(--white); padding: 40px 6%;
+      border-top: 1px solid #EEF2F7;
+    }
+    .trust-inner {
+      max-width: 1140px; margin: 0 auto;
+      display: flex; justify-content: space-around; flex-wrap: wrap; gap: 24px;
+    }
+    .trust-item { display: flex; align-items: center; gap: 12px; }
+    .trust-icon { font-size: 1.8rem; }
+    .trust-item strong {
+      display: block; font-family: 'Poppins', sans-serif;
+      font-size: 0.95rem; font-weight: 700; color: var(--navy);
+    }
+    .trust-item span { font-size: 0.8rem; color: var(--muted); }
+
+    /* FOOTER */
+    footer {
+      background: #060f1e; padding: 40px 6% 28px;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .footer-inner {
+      max-width: 1140px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 20px;
+    }
+    .footer-links { display: flex; gap: 28px; list-style: none; }
+    .footer-links a { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--gold); }
+    .footer-copy { color: rgba(255,255,255,0.25); font-size: 0.8rem; }
+
+    /* RESPONSIVE */
+    @media (max-width: 768px) {
+      nav .nav-links { display: none; }
+      .packages-grid { grid-template-columns: 1fr; }
+      .custom-banner { padding: 36px 28px; }
+      .section-header { flex-direction: column; align-items: flex-start; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="home.html" class="logo">Tourist<span>Cab</span></a>
+    <ul class="nav-links">
+      <li><a href="home.html">Home</a></li>
+      <li><a href="packages.html" class="active">Packages</a></li>
+      <li><a href="outstation.html">Outstation</a></li>
+      <li><a href="driver_partner.html">Drive With Us</a></li>
+    </ul>
+    <a href="#packages" class="nav-cta">Book Now</a>
+  </nav>
+
+  <!-- PAGE HERO -->
+  <section class="page-hero">
+    <div class="page-hero-content">
+      <div class="hero-tag">🗺️ Explore Tamil Nadu & Kerala</div>
+      <h1>Handpicked <em>Tourist Packages</em><br/>Just for You</h1>
+      <p>Curated day trips and multi-day tours with expert driver-guides. Fixed fares, no hidden costs, unforgettable memories.</p>
+      <div class="filter-tabs">
+        <button class="tab-btn active" onclick="filterPkg('all', this)">All Packages</button>
+        <button class="tab-btn" onclick="filterPkg('daytrip', this)">Day Trips</button>
+        <button class="tab-btn" onclick="filterPkg('multiday', this)">Multi-Day</button>
+        <button class="tab-btn" onclick="filterPkg('heritage', this)">Heritage</button>
+        <button class="tab-btn" onclick="filterPkg('hills', this)">Hills & Nature</button>
+        <button class="tab-btn" onclick="filterPkg('beach', this)">Beaches</button>
+        <button class="tab-btn" onclick="filterPkg('kerala', this)">Kerala</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PACKAGES -->
+  <section class="packages-section" id="packages">
+    <div class="packages-inner">
+      <div class="section-header">
+        <h2>Available Packages</h2>
+        <div class="result-count">Showing <span id="pkg-count">14</span> packages</div>
+      </div>
+
+      <div class="packages-grid" id="pkg-grid">
+
+        <!-- ─── TAMIL NADU SECTION LABEL ─── -->
+        <div class="section-label" data-label>
+          <span>🏛️ Tamil Nadu Packages</span>
+        </div>
+
+        <!-- TN Card 1: Madurai -->
+        <div class="pkg-card" data-category="heritage daytrip">
+          <div class="pkg-img" style="background: linear-gradient(135deg, #1a2f5a, #2d4a8a);">
+            <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="400" height="200" fill="#1a2f5a"/>
+              <ellipse cx="200" cy="180" rx="220" ry="40" fill="#0f1e3d"/>
+              <rect x="155" y="80" width="90" height="100" fill="#c9a227"/>
+              <polygon points="200,30 145,80 255,80" fill="#c9a227"/>
+              <rect x="165" y="100" width="70" height="80" fill="#b8901f"/>
+              <rect x="180" y="140" width="40" height="40" fill="#8b6914"/>
+              <rect x="150" y="78" width="100" height="8" fill="#e8b830" rx="2"/>
+              <rect x="155" y="62" width="90" height="8" fill="#e8b830" rx="2"/>
+              <rect x="163" y="47" width="74" height="8" fill="#e8b830" rx="2"/>
+              <rect x="172" y="35" width="56" height="8" fill="#e8b830" rx="2"/>
+              <rect x="183" y="108" width="14" height="20" rx="7" fill="#1a2f5a"/>
+              <rect x="203" y="108" width="14" height="20" rx="7" fill="#1a2f5a"/>
+              <rect x="100" y="140" width="6" height="40" fill="#4a7c3f"/>
+              <ellipse cx="103" cy="135" rx="18" ry="12" fill="#3d6b34"/>
+              <rect x="290" y="145" width="6" height="35" fill="#4a7c3f"/>
+              <ellipse cx="293" cy="140" rx="16" ry="10" fill="#3d6b34"/>
+              <circle cx="60" cy="40" r="2" fill="rgba(255,255,255,0.6)"/>
+              <circle cx="340" cy="25" r="1.5" fill="rgba(255,255,255,0.5)"/>
+              <circle cx="130" cy="20" r="1" fill="rgba(255,255,255,0.4)"/>
+              <circle cx="310" cy="55" r="2" fill="rgba(255,255,255,0.5)"/>
+            </svg>
+            <div class="pkg-badge badge-popular">⭐ Popular</div>
+            <div class="pkg-days">1 Day</div>
+          </div>
+          <div class="pkg-body">
+            <div class="pkg-location">📍 Madurai</div>
+            <h3>Madurai Temple City Tour</h3>
+            <p>Explore the magnificent Meenakshi Amman Temple, Thirumalai Nayakkar Palace, and the vibrant local markets.</p>
+            <div class="pkg-highlights">
+              <span class="highlight-tag">🛕 3 Temples</span>
+              <span class="highlight-tag">🍽️ Lunch Included</span>
+              <span class="highlight-tag">👤 Guide</span>
+            </div>
+          </div>
+          <div class="pkg-footer">
+            <div class="pkg-price">
+              <div class="price-label">Starting from</div>
+              <div class="price-val">₹2,499 <span>/ person</span></div>
+            </div>
+            <button class="pkg-book-btn">Book Now</button>
+          </div>
+        </div>
+
+        <!-- TN Card 2: Ooty & Kodaikanal -->
+        <div class="pkg-card" data-category="hills nature multiday">
+          <div class="pkg-img" style="background: linear-gradient(135deg, #1a3a2a, #2d6b4a);">
+            <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="400" height="200" fill="#1a3a2a"/>
+              <rect width="400" height="100" fill="#1a3a2a"/>
+              <polygon points="0,200 80,80 160,200" fill="#2d5a3d"/>
+              <polygon points="60,200 180,60 300,200" fill="#3d7a54"/>
+              <polygon points="200,200 310,70 400,200" fill="#2d5a3d"/>
+              <polygon points="280,200 370,90 400,130 400,200" fill="#4a8c63"/>
+              <rect x="0" y="140" width="400" height="20" fill="rgba(255,255,255,0.08)"/>
+              <rect x="0" y="155" width="400" height="15" fill="rgba(255,255,255,0.05)"/>
+              <path d="M20,170 Q50,165 80,170 Q110,175 140,170 Q170,165 200,170" stroke="#5aad72" stroke-width="3" fill="none"/>
+              <path d="M40,180 Q70,175 100,180 Q130,185 160,180 Q190,175 220,180" stroke="#5aad72" stroke-width="3" fill="none"/>
+              <ellipse cx="80" cy="45" rx="40" ry="15" fill="rgba(255,255,255,0.15)"/>
+              <ellipse cx="310" cy="35" rx="35" ry="12" fill="rgba(255,255,255,0.12)"/>
+              <rect x="250" y="90" width="6" height="60" fill="rgba(150,200,255,0.5)" rx="3"/>
+              <ellipse cx="253" cy="155" rx="12" ry="5" fill="rgba(150,200,255,0.3)"/>
+            </svg>
+            <div class="pkg-badge badge-new">✨ New</div>
+            <div class="pkg-days">2 Days</div>
+          </div>
+          <div class="pkg-body">
+            <div class="pkg-location">📍 Ooty & Kodaikanal</div>
+            <h3>Nilgiri Hills Weekend Escape</h3>
+            <p>Misty mountains, tea gardens, Ooty Lake, and Kodai's scenic valleys — a perfect 2-day hill retreat.</p>
+            <div class="pkg-highlights">
+              <span class="highlight-tag">🏨 Hotel Stay</span>
+              <span class="highlight-tag">🍵 Tea Factory</span>
+              <span class="highlight-tag">🚡 Toy Train</span>
+            </div>
+          </div>
+          <div class="pkg-footer">
+            <div class="pkg-price">
+              <div class="price-label">Starting from</div>
+              <div class="price-val">₹5,999 <span>/ person</span></div>
+            </div>
+            <button class="pkg-book-btn">Book Now</button>
+          </div>
+        </div>
+
+        <!-- TN Card 3: Rameswaram -->
+        <div class="pkg-card" data-category="beach daytrip">
+          <div class="pkg-img" style="background: linear-gradient(135deg, #0a2a4a, #1a5a8a);">
+            <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="400" height="200" fill="#0a2a4a"/>
+              <rect x="0" y="130" width="400" height="70" fill="#1a4a7a"/>
+              <path d="M0,130 Q50,118 100,130 Q150,142 200,130 Q250,118 300,130 Q350,142 400,130 L400,200 L0,200Z" fill="#1e5a8a"/>
+              <path d="M0,145 Q60,133 120,145 Q180,157 240,145 Q300,133 360,145 Q380,151 400,145" stroke="rgba(100,180,255,0.4)" stroke-width="2" fill="none"/>
+              <circle cx="200" cy="70" r="40" fill="#F5A623" opacity="0.8"/>
+              <rect x="0" y="65" width="400" height="10" fill="#0a2a4a"/>
+              <path d="M170,130 L200,70 L230,130Z" fill="rgba(245,166,35,0.15)"/>
+              <path d="M80,125 L110,115 L140,125 L130,130 L90,130Z" fill="#8B4513"/>
+              <rect x="110" y="100" width="3" height="15" fill="#5a3010"/>
+              <path d="M113,100 L128,108 L113,108Z" fill="#F5A623"/>
+              <rect x="320" y="80" width="20" height="50" fill="#fff" opacity="0.9"/>
+              <polygon points="320,80 340,80 330,65" fill="#e74c3c"/>
+              <rect x="315" y="127" width="30" height="8" fill="#ccc"/>
+              <path d="M60,55 Q68,50 76,55" stroke="white" stroke-width="2" fill="none"/>
+              <path d="M280,40 Q288,35 296,40" stroke="white" stroke-width="2" fill="none"/>
+              <ellipse cx="200" cy="200" rx="300" ry="30" fill="#c8a96e" opacity="0.5"/>
+            </svg>
+            <div class="pkg-badge badge-popular">⭐ Popular</div>
+            <div class="pkg-days">1 Day</div>
+          </div>
+          <div class="pkg-body">
+            <div class="pkg-location">📍 Rameswaram & Dhanushkodi</div>
+            <h3>Coastal Rameswaram Day Trip</h3>
+            <p>Visit the sacred Ramanathaswamy Temple, the ghost town of Dhanushkodi, and the pristine Agni Teertham beach.</p>
+            <div class="pkg-highlights">
+              <span class="highlight-tag">🌊 Beach Walk</span>
+              <span class="highlight-tag">🛕 Temple Visit</span>
+              <span class="highlight-tag">🐚 Dhanushkodi</span>
+            </div>
+          </div>
+          <div class="pkg-footer">
+            <div class="pkg-price">
+              <div class="price-label">Starting from</div>
+              <div class="price-val">₹3,199 <span>/ person</span></div>
+            </div>
+            <button class="pkg-book-btn">Book Now</button>
+          </div>
+        </div>
+
+        <!-- TN Card 4: Thanjavur & Trichy -->
+        <div class="pkg-card" data-category="heritage multiday">
+          <div class="pkg-img" style="background: linear-gradient(135deg, #2a1a0a, #5a3a1a);">
+            <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="400" height="200" fill="#2a1a0a"/>
+              <rect x="50" y="90" width="300" height="110" fill="#6b4c2a"/>
+              <rect x="50" y="85" width="30" height="20" fill="#7a5a35" rx="2"/>
+              <rect x="100" y="85" width="30" height="20" fill="#7a5a35" rx="2"/>
+              <rect x="150" y="85" width="30" height="20" fill="#7a5a35" rx="2"/>
+              <rect x="200" y="85" width="30" height="20" fill="#7a5a35" rx="2"/>
+              <rect x="250" y="85" width="30" height="20" fill="#7a5a35" rx="2"/>
+              <rect x="300" y="85" width="30" height="20" fill="#7a5a35" rx="2"/>
+              <rect x="170" y="120" width="60" height="80" fill="#3d2810"/>
+              <path d="M170,120 Q200,100 230,120Z" fill="#3d2810"/>
+              <rect x="40" y="60" width="50" height="140" fill="#7a5a35"/>
+              <polygon points="40,60 90,60 65,30" fill="#8a6a40"/>
+              <rect x="310" y="60" width="50" height="140" fill="#7a5a35"/>
+              <polygon points="310,60 360,60 335,30" fill="#8a6a40"/>
+              <rect x="90" y="110" width="20" height="30" rx="10" fill="#1a0a00"/>
+              <rect x="130" y="110" width="20" height="30" rx="10" fill="#1a0a00"/>
+              <rect x="250" y="110" width="20" height="30" rx="10" fill="#1a0a00"/>
+              <rect x="290" y="110" width="20" height="30" rx="10" fill="#1a0a00"/>
+              <circle cx="100" cy="30" r="1.5" fill="rgba(255,220,100,0.8)"/>
+              <circle cx="200" cy="20" r="2" fill="rgba(255,220,100,0.9)"/>
+              <circle cx="300" cy="35" r="1.5" fill="rgba(255,220,100,0.7)"/>
+            </svg>
+            <div class="pkg-badge badge-value">💎 Best Value</div>
+            <div class="pkg-days">3 Days</div>
+          </div>
+          <div class="pkg-body">
+            <div class="pkg-location">📍 Thanjavur & Trichy</div>
+            <h3>Chola Kingdom Heritage Trail</h3>
+            <p>Immerse in 1000-year-old Chola history — Brihadeeswarar Temple, Rockfort, and the grand Srirangam Island temple.</p>
+            <div class="pkg-highlights">
+              <span class="highlight-tag">🏰 Fort Visit</span>
+              <span class="highlight-tag">🏨 2 Nights Stay</span>
+              <span class="highlight-tag">🎭 Cultural Show</span>
+            </div>
+          </div>
+          <div class="pkg-footer">
+            <div class="pkg-price">
+              <div class="price-label">Starting from</div>
+              <div class="price-val">₹8,499 <span>/ person</span></div>
+            </div>
+            <button class="pkg-book-btn">Book Now</button>
+          </div>
+        </div>
+
+        <!-- TN Card 5: Courtallam -->
+        <div class="pkg-card" data-category="hills nature daytrip">
+          <div class="pkg-img" style="background: linear-gradient(135deg, #1a2a1a, #3a5a2a);">
+            <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="400" height="200" fill="#1a2a1a"/>
+              <polygon points="0,200 100,50 200,200" fill="#2d4a2d"/>
+              <polygon points="100,200 230,40 360,200" fill="#3a5a3a"/>
+              <polygon points="260,200 360,80 400,130 400,200" fill="#2d4a2d"/>
+              <path d="M155,70 Q158,100 160,130 Q162,155 165,180" stroke="rgba(150,220,255,0.7)" stroke-width="5" fill="none"/>
+              <path d="M240,60 Q243,95 245,125 Q247,150 250,180" stroke="rgba(150,220,255,0.6)" stroke-width="4" fill="none"/>
+              <ellipse cx="162" cy="185" rx="25" ry="10" fill="rgba(100,180,255,0.4)"/>
+              <ellipse cx="248" cy="185" rx="20" ry="8" fill="rgba(100,180,255,0.3)"/>
+              <rect x="60" y="130" width="8" height="40" fill="#2d1a00"/>
+              <circle cx="64" cy="125" r="20" fill="#2d5a1a"/>
+              <rect x="310" y="125" width="8" height="45" fill="#2d1a00"/>
+              <circle cx="314" cy="118" r="18" fill="#3a6a22"/>
+              <path d="M200,0 L180,60 M200,0 L200,65 M200,0 L220,60" stroke="rgba(255,220,100,0.2)" stroke-width="12" fill="none"/>
+              <path d="M80,40 Q88,35 96,40" stroke="white" stroke-width="1.5" fill="none"/>
+              <path d="M310,50 Q318,45 326,50" stroke="white" stroke-width="1.5" fill="none"/>
+            </svg>
+            <div class="pkg-badge badge-new">✨ New</div>
+            <div class="pkg-days">1 Day</div>
+          </div>
+          <div class="pkg-body">
+            <div class="pkg-location">📍 Courtallam</div>
+            <h3>Courtallam Waterfalls Day Trip</h3>
+            <p>Known as the "Spa of South India," experience the 9 iconic waterfalls surrounded by lush Western Ghats forests.</p>
+            <div class="pkg-highlights">
+              <span class="highlight-tag">💦 9 Waterfalls</span>
+              <span class="highlight-tag">🌿 Forest Trek</span>
+              <span class="highlight-tag">🍌 Local Food</span>
+            </div>
+          </div>
+          <div class="pkg-footer">
+            <div class="pkg-price">
+              <div class="price-label">Starting from</div>
+              <div class="price-val">₹1,999 <span>/ person</span></div>
+            </div>
+            <button class="pkg-book-btn">Book Now</button>
+          </div>
+        </div>
+
+        <!-- TN Card 6: Mahabalipuram -->
+        <div class="pkg-card" data-category="beach heritage daytrip">
+          <div class="pkg-img" style="background: linear-gradient(135deg, #0a1a3a, #1a3a5a);">
+            <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="400" height="200" fill="#0a1a3a"/>
+              <rect x="0" y="140" width="400" height="60" fill="#0d3060"/>
+              <path d="M0,140 Q40,128 80,140 Q120,152 160,140 Q200,128 240,140 Q280,152 320,140 Q360,128 400,140" fill="#1a4a80"/>
+              <rect x="140" y="80" width="120" height="60" fill="#8a7a5a"/>
+              <rect x="145" y="75" width="110" height="10" fill="#9a8a6a" rx="1"/>
+              <rect x="155" y="66" width="90" height="10" fill="#9a8a6a" rx="1"/>
+              <rect x="165" y="58" width="70" height="10" fill="#9a8a6a" rx="1"/>
+              <rect x="175" y="51" width="50" height="10" fill="#9a8a6a" rx="1"/>
+              <polygon points="200,30 178,52 222,52" fill="#b0a070"/>
+              <rect x="188" y="110" width="24" height="30" fill="#3d2810"/>
+              <path d="M188,110 Q200,98 212,110Z" fill="#3d2810"/>
+              <ellipse cx="80" cy="148" rx="30" ry="12" fill="#5a5040"/>
+              <ellipse cx="330" cy="152" rx="25" ry="10" fill="#5a5040"/>
+              <circle cx="320" cy="45" r="28" fill="#fff8e0" opacity="0.9"/>
+              <circle cx="308" cy="40" r="26" fill="#0a1a3a"/>
+              <circle cx="60" cy="30" r="2" fill="rgba(255,255,200,0.9)"/>
+              <circle cx="140" cy="20" r="1.5" fill="rgba(255,255,200,0.7)"/>
+              <circle cx="250" cy="15" r="2" fill="rgba(255,255,200,0.8)"/>
+            </svg>
+            <div class="pkg-badge badge-popular">⭐ Popular</div>
+            <div class="pkg-days">1 Day</div>
+          </div>
+          <div class="pkg-body">
+            <div class="pkg-location">📍 Mahabalipuram</div>
+            <h3>Shore Temple & Sculpture Tour</h3>
+            <p>UNESCO World Heritage site — magnificent 7th-century rock-cut temples, sculptures, and the scenic Bay of Bengal.</p>
+            <div class="pkg-highlights">
+              <span class="highlight-tag">🏛️ UNESCO Site</span>
+              <span class="highlight-tag">🌊 Beach</span>
+              <span class="highlight-tag">🎨 Rock Art</span>
+            </div>
+          </div>
+          <div class="pkg-footer">
+            <div class="pkg-price">
+              <div class="price-label">Starting from</div>
+              <div class="price-val">₹2,299 <span>/ person</span></div>
+            </div>
+            <button class="pkg-book-btn">Book Now</button>
+          </div>
+        </div>
+
+        <!-- TN Card 7: Wildlife Safari -->
+        <div class="pkg-card" data-category="hills multiday">
+          <div class="pkg-img" style="background: linear-gradient(135deg, #1a1a3a, #2a2a5a);">
+            <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="400" height="200" fill="#1a1a3a"/>
+              <circle cx="80" cy="40" r="2" fill="white" opacity="0.8"/>
+              <circle cx="150" cy="20" r="1.5" fill="white" opacity="0.7"/>
+              <circle cx="250" cy="35" r="2.5" fill="white" opacity="0.9"/>
+              <circle cx="330" cy="15" r="1" fill="white" opacity="0.6"/>
+              <circle cx="350" cy="50" r="2" fill="white" opacity="0.8"/>
+              <ellipse cx="200" cy="160" rx="70" ry="40" fill="#0d0d2a"/>
+              <ellipse cx="165" cy="145" rx="30" ry="30" fill="#0d0d2a"/>
+              <circle cx="148" cy="138" r="22" fill="#111130"/>
+              <path d="M138,152 Q120,165 125,175 Q130,182 140,178" stroke="#111130" stroke-width="12" fill="none" stroke-linecap="round"/>
+              <path d="M140,148 Q125,148 118,158" stroke="#e8e0c0" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <ellipse cx="162" cy="135" rx="18" ry="22" fill="#0d0d2a"/>
+              <circle cx="142" cy="132" r="3" fill="#F5A623"/>
+              <rect x="40" y="120" width="8" height="50" fill="#0d1a0d"/>
+              <polygon points="25,120 44,80 63,120" fill="#0d2a0d"/>
+              <rect x="340" y="115" width="8" height="55" fill="#0d1a0d"/>
+              <polygon points="326,115 344,75 362,115" fill="#0d2a0d"/>
+              <circle cx="310" cy="45" r="22" fill="#fff8d0"/>
+              <circle cx="300" cy="40" r="20" fill="#1a1a3a"/>
+              <rect x="0" y="185" width="400" height="15" fill="#0d1a0d"/>
+            </svg>
+            <div class="pkg-badge badge-value">💎 Best Value</div>
+            <div class="pkg-days">3 Days</div>
+          </div>
+          <div class="pkg-body">
+            <div class="pkg-location">📍 Mudumalai & Anamalai</div>
+            <h3>Wildlife Safari & Forest Stay</h3>
+            <p>Spot wild elephants, leopards, and rare birds in Tamil Nadu's premier wildlife sanctuaries with expert naturalist guides.</p>
+            <div class="pkg-highlights">
+              <span class="highlight-tag">🐘 Elephant Safari</span>
+              <span class="highlight-tag">🏕️ Forest Lodge</span>
+              <span class="highlight-tag">🔭 Birdwatching</span>
+            </div>
+          </div>
+          <div class="pkg-footer">
+            <div class="pkg-price">
+              <div class="price-label">Starting from</div>
+              <div class="price-val">₹9,999 <span>/ person</span></div>
+            </div>
+            <button class="pkg-book-btn">Book Now</button>
+          </div>
+        </div>
+
+        <!-- TN Card 8: Kanchipuram -->
+        <div class="pkg-card" data-category="heritage daytrip">
+          <div class="pkg-img" style="background: linear-gradient(135deg, #2a0a1a, #5a1a3a);">
+            <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="400" height="200" fill="#2a0a1a"/>
+              <rect x="130" y="70" width="140" height="130" fill="#8a3a5a"/>
+              <rect x="125" y="65" width="150" height="10" fill="#a04a6a" rx="1"/>
+              <rect x="135" y="55" width="130" height="10" fill="#a04a6a" rx="1"/>
+              <rect x="147" y="46" width="106" height="10" fill="#a04a6a" rx="1"/>
+              <rect x="158" y="38" width="84" height="10" fill="#a04a6a" rx="1"/>
+              <rect x="168" y="30" width="64" height="10" fill="#a04a6a" rx="1"/>
+              <polygon points="200,8 170,30 230,30" fill="#c05a7a"/>
+              <rect x="197" y="0" width="6" height="10" fill="#F5A623"/>
+              <circle cx="200" cy="0" r="5" fill="#F5A623"/>
+              <rect x="180" y="130" width="40" height="70" fill="#1a0010"/>
+              <path d="M180,130 Q200,115 220,130Z" fill="#1a0010"/>
+              <rect x="140" y="90" width="12" height="110" fill="#6a2a4a"/>
+              <rect x="248" y="90" width="12" height="110" fill="#6a2a4a"/>
+              <path d="M0,100 Q20,80 40,100 Q60,120 80,100" stroke="#F5A623" stroke-width="3" fill="none" opacity="0.6"/>
+              <path d="M320,110 Q340,90 360,110 Q380,130 400,110" stroke="#F5A623" stroke-width="3" fill="none" opacity="0.6"/>
+              <circle cx="60" cy="35" r="2" fill="rgba(255,200,100,0.8)"/>
+              <circle cx="340" cy="25" r="2" fill="rgba(255,200,100,0.8)"/>
+            </svg>
+            <div class="pkg-badge badge-new">✨ New</div>
+            <div class="pkg-days">1 Day</div>
+          </div>
+          <div class="pkg-body">
+            <div class="pkg-location">📍 Kanchipuram</div>
+            <h3>Kanchipuram Temple & Silk Trail</h3>
+            <p>City of 1000 temples — explore magnificent Pallava and Chola temples, and visit the legendary Kanchipuram silk weaving workshops.</p>
+            <div class="pkg-highlights">
+              <span class="highlight-tag">🛕 5 Temples</span>
+              <span class="highlight-tag">🧵 Silk Weaving</span>
+              <span class="highlight-tag">🍱 Lunch</span>
+            </div>
+          </div>
+          <div class="pkg-footer">
+            <div class="pkg-price">
+              <div class="price-label">Starting from</div>
+              <div class="price-val">₹2,799 <span>/ person</span></div>
+            </div>
+            <button class="pkg-book-btn">Book Now</button>
+          </div>
+        </div>
+
+        <!-- ─── KERALA SECTION LABEL ─── -->
+        <div class="section-label" data-label>
+          <span>🌴 Kerala Packages</span>
+        </div>
+
+        <!-- KERALA Card 1: 5 Destinations -->
+        <div class="pkg-card" data-category="multiday hills kerala">
+          <div class="pkg-img" style="background: linear-gradient(135deg, #0f5132, #198754);">
+            <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="400" height="200" fill="#0f5132"/>
+              <rect x="0" y="130" width="400" height="70" fill="#0a3d2b"/>
+              <path d="M0,130 Q60,120 120,130 Q180,140 240,130 Q300,120 360,130 Q380,135 400,130 L400,200 L0,200Z" fill="#0d4a34"/>
+              <!-- Houseboat -->
+              <rect x="120" y="108" width="130" height="28" fill="#8B4513" rx="4"/>
+              <rect x="130" y="88" width="110" height="22" fill="#a0522d" rx="3"/>
+              <rect x="145" y="78" width="80" height="12" fill="#c8a060" rx="2"/>
+              <rect x="195" y="60" width="4" height="20" fill="#5a3010"/>
+              <path d="M199,60 L218,70 L199,70Z" fill="#F5A623"/>
+              <!-- Mountains -->
+              <polygon points="0,130 70,60 140,130" fill="#1a5c38"/>
+              <polygon points="60,130 150,45 240,130" fill="#22774a"/>
+              <polygon points="200,130 290,55 380,130" fill="#1a5c38"/>
+              <!-- Tea rows -->
+              <path d="M10,138 Q50,133 90,138 Q130,143 170,138" stroke="#3aad6a" stroke-width="2.5" fill="none"/>
+              <path d="M220,142 Q260,137 300,142 Q340,147 380,142" stroke="#3aad6a" stroke-width="2.5" fill="none"/>
+              <!-- Elephant -->
+              <ellipse cx="330" cy="168" rx="28" ry="18" fill="#1a3d22"/>
+              <circle cx="310" cy="158" r="14" fill="#1e4828"/>
+              <path d="M302,165 Q290,174 294,182" stroke="#1e4828" stroke-width="7" fill="none" stroke-linecap="round"/>
+              <circle cx="307" cy="153" r="3" fill="#F5A623"/>
+              <!-- Coconut trees -->
+              <rect x="60" y="100" width="5" height="30" fill="#4a3010"/>
+              <ellipse cx="62" cy="97" rx="14" ry="9" fill="#2d6b1a"/>
+              <rect x="350" y="95" width="5" height="35" fill="#4a3010"/>
+              <ellipse cx="352" cy="92" rx="13" ry="8" fill="#2d6b1a"/>
+              <!-- Sun -->
+              <circle cx="340" cy="38" r="22" fill="#F5A623" opacity="0.85"/>
+              <path d="M80,28 Q86,24 92,28" stroke="white" stroke-width="1.5" fill="none"/>
+              <path d="M160,18 Q166,14 172,18" stroke="white" stroke-width="1.5" fill="none"/>
+            </svg>
+            <div class="pkg-badge badge-popular">⭐ Popular</div>
+            <div class="pkg-days">5 Days</div>
+          </div>
+          <div class="pkg-body">
+            <div class="pkg-location">📍 Kerala</div>
+            <h3>Kerala 5-Destination Highlights Tour</h3>
+            <p>The ultimate Kerala circuit — Munnar's misty peaks, Thekkady wildlife, Alleppey backwaters, vibrant Kochi, and Kovalam beach all in one grand journey.</p>
+            <div class="pkg-highlights">
+              <span class="highlight-tag">🌿 Munnar</span>
+              <span class="highlight-tag">🐘 Thekkady</span>
+              <span class="highlight-tag">🚤 Alleppey</span>
+              <span class="highlight-tag">🏙️ Kochi</span>
+              <span class="highlight-tag">🏖️ Kovalam</span>
+            </div>
+          </div>
+          <div class="pkg-footer">
+            <div class="pkg-price">
+              <div class="price-label">Starting from</div>
+              <div class="price-val">₹18,999 <span>/ person</span></div>
+            </div>
+            <button class="pkg-book-btn">Book Now</button>
+          </div>
+        </div>
+
+        <!-- KERALA Card 2: 3 Places Nature -->
+        <div class="pkg-card" data-category="nature multiday kerala">
+          <div class="pkg-img" style="background: linear-gradient(135deg, #14532d, #16a34a);">
+            <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="400" height="200" fill="#14532d"/>
+              <rect width="400" height="90" fill="#0f3d22"/>
+              <polygon points="0,200 90,70 180,200" fill="#1a6b38"/>
+              <polygon points="80,200 200,50 320,200" fill="#22884a"/>
+              <polygon points="260,200 350,75 400,110 400,200" fill="#1a6b38"/>
+              <rect x="0" y="148" width="400" height="16" fill="rgba(255,255,255,0.09)"/>
+              <path d="M0,162 Q40,156 80,162 Q120,168 160,162 Q200,156 240,162" stroke="#4ade80" stroke-width="3" fill="none"/>
+              <path d="M160,172 Q200,166 240,172 Q280,178 320,172 Q360,166 400,172" stroke="#4ade80" stroke-width="3" fill="none"/>
+              <!-- Waterfall -->
+              <path d="M290,70 Q293,100 295,128 Q297,152 300,178" stroke="rgba(150,220,255,0.75)" stroke-width="6" fill="none" stroke-linecap="round"/>
+              <ellipse cx="297" cy="183" rx="18" ry="7" fill="rgba(100,200,255,0.35)"/>
+              <!-- Houseboat -->
+              <rect x="60" y="155" width="110" height="24" fill="#7a4010" rx="4"/>
+              <rect x="68" y="138" width="94" height="19" fill="#8B4513" rx="3"/>
+              <rect x="100" y="128" width="4" height="12" fill="#4a2808"/>
+              <path d="M104,128 L118,135 L104,135Z" fill="#F5A623"/>
+              <!-- Water -->
+              <rect x="0" y="168" width="400" height="32" fill="#0d4a2a" opacity="0.8"/>
+              <path d="M0,168 Q50,160 100,168 Q150,176 200,168 Q250,160 300,168 Q350,176 400,168" fill="#115e36" opacity="0.7"/>
+              <ellipse cx="100" cy="32" rx="45" ry="16" fill="rgba(255,255,255,0.12)"/>
+              <ellipse cx="300" cy="25" rx="38" ry="13" fill="rgba(255,255,255,0.10)"/>
+              <path d="M55,22 Q61,17 67,22" stroke="white" stroke-width="1.5" fill="none"/>
+              <path d="M340,35 Q346,30 352,35" stroke="white" stroke-width="1.5" fill="none"/>
+            </svg>
+            <div class="pkg-badge badge-new">✨ New</div>
+            <div class="pkg-days">3 Days</div>
+          </div>
+          <div class="pkg-body">
+            <div class="pkg-location">📍 Kerala</div>
+            <h3>Kerala 3-Place Nature Package</h3>
+            <p>A refreshing 3-day escape through Munnar's emerald tea gardens, Thekkady's wild forests, and Alleppey's tranquil backwater houseboat cruise.</p>
+            <div class="pkg-highlights">
+              <span class="highlight-tag">🍃 Munnar Tea Gardens</span>
+              <span class="highlight-tag">🐘 Thekkady Safari</span>
+              <span class="highlight-tag">🚤 Alleppey Houseboat</span>
+            </div>
+          </div>
+          <div class="pkg-footer">
+            <div class="pkg-price">
+              <div class="price-label">Starting from</div>
+              <div class="price-val">₹11,999 <span>/ person</span></div>
+            </div>
+            <button class="pkg-book-btn">Book Now</button>
+          </div>
+        </div>
+
+        <!-- KERALA Card 3: 60 Tourist Spots Cab Package -->
+        <div class="pkg-card" data-category="daytrip kerala">
+          <div class="pkg-img" style="background: linear-gradient(135deg, #0f766e, #0d9488);">
+            <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="400" height="200" fill="#0f766e"/>
+              <!-- Road -->
+              <path d="M0,180 Q100,160 200,158 Q300,156 400,145" stroke="#1a1a1a" stroke-width="22" fill="none"/>
+              <path d="M0,180 Q100,160 200,158 Q300,156 400,145" stroke="#2a2a2a" stroke-width="20" fill="none"/>
+              <path d="M20,178 Q40,172 60,170" stroke="white" stroke-width="2" fill="none" stroke-dasharray="10,8"/>
+              <path d="M100,168 Q130,164 160,162" stroke="white" stroke-width="2" fill="none" stroke-dasharray="10,8"/>
+              <path d="M210,159 Q240,157 270,155" stroke="white" stroke-width="2" fill="none" stroke-dasharray="10,8"/>
+              <path d="M320,150 Q350,148 380,146" stroke="white" stroke-width="2" fill="none" stroke-dasharray="10,8"/>
+              <!-- Cab -->
+              <rect x="155" y="130" width="90" height="36" fill="#F5A623" rx="8"/>
+              <rect x="165" y="118" width="70" height="20" fill="#e8941a" rx="6"/>
+              <rect x="170" y="121" width="26" height="13" fill="#cce8ff" rx="3"/>
+              <rect x="202" y="121" width="26" height="13" fill="#cce8ff" rx="3"/>
+              <circle cx="175" cy="166" r="10" fill="#1a1a1a"/>
+              <circle cx="175" cy="166" r="5" fill="#555"/>
+              <circle cx="225" cy="164" r="10" fill="#1a1a1a"/>
+              <circle cx="225" cy="164" r="5" fill="#555"/>
+              <rect x="162" y="137" width="76" height="14" fill="#0f5132" rx="3"/>
+              <rect x="242" y="138" width="8" height="5" fill="#fffbe0" rx="2"/>
+              <!-- Mountains bg -->
+              <polygon points="0,130 60,70 120,130" fill="#0d5c52" opacity="0.7"/>
+              <polygon points="280,130 340,60 400,110" fill="#0d5c52" opacity="0.7"/>
+              <!-- Location pins -->
+              <circle cx="80" cy="75" r="10" fill="#F5A623"/>
+              <rect x="77" y="82" width="6" height="8" fill="#F5A623"/>
+              <circle cx="80" cy="75" r="5" fill="white"/>
+              <circle cx="200" cy="65" r="10" fill="#F5A623"/>
+              <rect x="197" y="72" width="6" height="8" fill="#F5A623"/>
+              <circle cx="200" cy="65" r="5" fill="white"/>
+              <circle cx="320" cy="58" r="10" fill="#F5A623"/>
+              <rect x="317" y="65" width="6" height="8" fill="#F5A623"/>
+              <circle cx="320" cy="58" r="5" fill="white"/>
+              <!-- Dotted route line -->
+              <path d="M80,85 Q140,95 200,73 Q260,65 320,68" stroke="#F5A623" stroke-width="2" fill="none" stroke-dasharray="6,5" opacity="0.8"/>
+              <!-- Coconut tree -->
+              <rect x="22" y="110" width="5" height="42" fill="#5a3a10"/>
+              <ellipse cx="24" cy="107" rx="16" ry="10" fill="#16803a"/>
+              <!-- Sun -->
+              <circle cx="360" cy="35" r="24" fill="#fbbf24" opacity="0.9"/>
+            </svg>
+            <div class="pkg-badge badge-cab">🚖 Cab Included</div>
+            <div class="pkg-days">Flexible</div>
+          </div>
+          <div class="pkg-body">
+            <div class="pkg-location">📍 Kerala Tourist Places</div>
+            <h3>Kerala Sightseeing Cab Package</h3>
+            <p>Explore Kerala's 60+ top tourist spots at your own pace with a dedicated cab and experienced driver-guide. Choose your places, we handle the ride.</p>
+            <div class="pkg-highlights">
+              <span class="highlight-tag">🚖 Cab Included</span>
+              <span class="highlight-tag">📍 60+ Tourist Spots</span>
+              <span class="highlight-tag">👤 Driver Guide</span>
+              <span class="highlight-tag">⏱️ Flexible Timing</span>
+            </div>
+          </div>
+          <div class="pkg-footer">
+            <div class="pkg-price">
+              <div class="price-label">Starting from</div>
+              <div class="price-val">₹4,999 <span>/ day</span></div>
+            </div>
+            <button class="pkg-book-btn">Book Now</button>
+          </div>
+        </div>
+
+        <!-- KERALA Card 4: Kochi–Munnar Weekend -->
+        <div class="pkg-card" data-category="multiday hills kerala">
+          <div class="pkg-img" style="background: linear-gradient(135deg, #1e3a8a, #3b82f6);">
+            <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="400" height="200" fill="#1e3a8a"/>
+              <!-- City skyline (Kochi) -->
+              <rect x="20" y="110" width="30" height="90" fill="#1e40af"/>
+              <rect x="55" y="130" width="20" height="70" fill="#2952c4"/>
+              <rect x="80" y="100" width="40" height="100" fill="#1e3a8a"/>
+              <rect x="92" y="88" width="16" height="14" fill="#2952c4"/>
+              <rect x="125" y="120" width="25" height="80" fill="#1e40af"/>
+              <!-- Windows city -->
+              <rect x="25" y="115" width="8" height="8" fill="#93c5fd" opacity="0.7"/>
+              <rect x="38" y="115" width="8" height="8" fill="#93c5fd" opacity="0.5"/>
+              <rect x="25" y="128" width="8" height="8" fill="#93c5fd" opacity="0.6"/>
+              <rect x="84" y="106" width="8" height="8" fill="#93c5fd" opacity="0.7"/>
+              <rect x="96" y="106" width="8" height="8" fill="#93c5fd" opacity="0.5"/>
+              <!-- Mountains right (Munnar) -->
+              <polygon points="200,200 280,70 360,200" fill="#1e4d3a"/>
+              <polygon points="280,200 340,90 400,150 400,200" fill="#165c30"/>
+              <polygon points="310,200 380,80 400,110 400,200" fill="#1a6b38"/>
+              <!-- Mist between city and mountains -->
+              <rect x="0" y="155" width="400" height="20" fill="rgba(255,255,255,0.06)"/>
+              <!-- Water (Arabian Sea) -->
+              <rect x="0" y="165" width="200" height="35" fill="#1e4a8a"/>
+              <path d="M0,165 Q25,158 50,165 Q75,172 100,165 Q125,158 150,165 Q175,172 200,165" fill="#2563b0" opacity="0.7"/>
+              <!-- Boat -->
+              <path d="M55,163 L80,156 L105,163 L98,168 L62,168Z" fill="#8B4513"/>
+              <!-- Tea rows munnar -->
+              <path d="M215,170 Q240,164 265,170 Q290,176 315,170" stroke="#4ade80" stroke-width="2" fill="none"/>
+              <!-- Sun / clouds -->
+              <circle cx="320" cy="35" r="20" fill="#fbbf24" opacity="0.85"/>
+              <ellipse cx="80" cy="45" rx="40" ry="14" fill="rgba(255,255,255,0.12)"/>
+              <ellipse cx="200" cy="30" rx="30" ry="10" fill="rgba(255,255,255,0.10)"/>
+            </svg>
+            <div class="pkg-badge badge-value">💎 Best Value</div>
+            <div class="pkg-days">2 Days</div>
+          </div>
+          <div class="pkg-body">
+            <div class="pkg-location">📍 Kochi & Munnar, Kerala</div>
+            <h3>Kochi – Munnar Weekend Trip</h3>
+            <p>Perfect weekend getaway covering Fort Kochi's colonial charm, Chinese fishing nets, and Munnar's breathtaking hill station scenery.</p>
+            <div class="pkg-highlights">
+              <span class="highlight-tag">🏙️ Fort Kochi</span>
+              <span class="highlight-tag">⛰️ Munnar Hills</span>
+              <span class="highlight-tag">🚗 Scenic Drive</span>
+            </div>
+          </div>
+          <div class="pkg-footer">
+            <div class="pkg-price">
+              <div class="price-label">Starting from</div>
+              <div class="price-val">₹7,999 <span>/ person</span></div>
+            </div>
+            <button class="pkg-book-btn">Book Now</button>
+          </div>
+        </div>
+
+        <!-- KERALA Card 5: Alleppey Houseboat -->
+        <div class="pkg-card" data-category="multiday kerala beach">
+          <div class="pkg-img" style="background: linear-gradient(135deg, #0f766e, #14b8a6);">
+            <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="400" height="200" fill="#0f766e"/>
+              <!-- Sky with sunset -->
+              <rect width="400" height="110" fill="#0c4f4a"/>
+              <!-- Sun reflection gradient on water -->
+              <rect x="0" y="110" width="400" height="90" fill="#0a3d38"/>
+              <!-- Ripples -->
+              <path d="M0,120 Q50,112 100,120 Q150,128 200,120 Q250,112 300,120 Q350,128 400,120" fill="#0d5c55" opacity="0.8"/>
+              <path d="M0,140 Q60,132 120,140 Q180,148 240,140 Q300,132 360,140 Q380,144 400,140" fill="#115c55" opacity="0.6"/>
+              <path d="M0,158 Q40,150 80,158 Q120,166 160,158 Q200,150 240,158 Q280,166 320,158 Q360,150 400,158" fill="#0d4a44" opacity="0.5"/>
+              <!-- Houseboat main -->
+              <rect x="80" y="100" width="240" height="50" fill="#7a4010" rx="6"/>
+              <rect x="95" y="75" width="210" height="30" fill="#8B4513" rx="5"/>
+              <rect x="110" y="62" width="180" height="18" fill="#c8a060" rx="4"/>
+              <!-- Windows houseboat -->
+              <rect x="115" y="79" width="28" height="18" fill="#87ceeb" rx="3" opacity="0.8"/>
+              <rect x="152" y="79" width="28" height="18" fill="#87ceeb" rx="3" opacity="0.8"/>
+              <rect x="189" y="79" width="28" height="18" fill="#87ceeb" rx="3" opacity="0.8"/>
+              <rect x="226" y="79" width="28" height="18" fill="#87ceeb" rx="3" opacity="0.8"/>
+              <rect x="263" y="79" width="25" height="18" fill="#87ceeb" rx="3" opacity="0.8"/>
+              <!-- Flag / mast -->
+              <rect x="196" y="42" width="4" height="22" fill="#5a3010"/>
+              <path d="M200,42 L220,50 L200,54Z" fill="#F5A623"/>
+              <!-- Coconut trees on bank -->
+              <rect x="18" y="90" width="5" height="45" fill="#4a3010"/>
+              <ellipse cx="20" cy="88" rx="15" ry="10" fill="#16803a"/>
+              <rect x="365" y="85" width="5" height="50" fill="#4a3010"/>
+              <ellipse cx="367" cy="83" rx="14" ry="9" fill="#16803a"/>
+              <!-- Sunset sky -->
+              <circle cx="200" cy="55" r="32" fill="#f97316" opacity="0.6"/>
+              <rect x="0" y="50" width="400" height="10" fill="#0c4f4a"/>
+              <!-- Reflection of sunset -->
+              <path d="M175,110 L200,55 L225,110Z" fill="rgba(249,115,22,0.2)"/>
+              <!-- Birds -->
+              <path d="M60,38 Q66,33 72,38" stroke="white" stroke-width="1.5" fill="none"/>
+              <path d="M130,25 Q136,20 142,25" stroke="white" stroke-width="1.5" fill="none"/>
+              <path d="M320,30 Q326,25 332,30" stroke="white" stroke-width="1.5" fill="none"/>
+            </svg>
+            <div class="pkg-badge badge-trending">🔥 Trending</div>
+            <div class="pkg-days">2 Days</div>
+          </div>
+          <div class="pkg-body">
+            <div class="pkg-location">📍 Alleppey, Kerala</div>
+            <h3>Alleppey Houseboat Package</h3>
+            <p>Cruise through Kerala's legendary backwaters on a luxury houseboat with sunset views, fresh local cuisine, and overnight stay on the water.</p>
+            <div class="pkg-highlights">
+              <span class="highlight-tag">🚤 Luxury Houseboat</span>
+              <span class="highlight-tag">🌅 Sunset Cruise</span>
+              <span class="highlight-tag">🍽️ Meals Included</span>
+            </div>
+          </div>
+          <div class="pkg-footer">
+            <div class="pkg-price">
+              <div class="price-label">Starting from</div>
+              <div class="price-val">₹9,499 <span>/ person</span></div>
+            </div>
+            <button class="pkg-book-btn">Book Now</button>
+          </div>
+        </div>
+
+        <!-- KERALA Card 6: Wayanad Adventure -->
+        <div class="pkg-card" data-category="hills multiday kerala">
+          <div class="pkg-img" style="background: linear-gradient(135deg, #166534, #4ade80);">
+            <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="400" height="200" fill="#166534"/>
+              <!-- Dense forest -->
+              <polygon points="0,200 60,90 120,200" fill="#14532d"/>
+              <polygon points="40,200 120,60 200,200" fill="#15803d"/>
+              <polygon points="120,200 210,50 300,200" fill="#16a34a"/>
+              <polygon points="230,200 310,70 390,200" fill="#14532d"/>
+              <polygon points="320,200 380,95 400,130 400,200" fill="#15803d"/>
+              <!-- Mist layers -->
+              <rect x="0" y="145" width="400" height="18" fill="rgba(255,255,255,0.10)"/>
+              <rect x="0" y="160" width="400" height="12" fill="rgba(255,255,255,0.07)"/>
+              <!-- Waterfall 1 -->
+              <path d="M148,65 Q151,95 153,125 Q155,148 158,175" stroke="rgba(180,235,255,0.8)" stroke-width="7" fill="none" stroke-linecap="round"/>
+              <ellipse cx="154" cy="180" rx="20" ry="8" fill="rgba(120,210,255,0.4)"/>
+              <!-- Waterfall 2 -->
+              <path d="M260,75 Q263,105 265,130 Q267,152 270,178" stroke="rgba(180,235,255,0.65)" stroke-width="5" fill="none" stroke-linecap="round"/>
+              <ellipse cx="266" cy="182" rx="15" ry="6" fill="rgba(120,210,255,0.3)"/>
+              <!-- Cave opening -->
+              <ellipse cx="360" cy="165" rx="28" ry="22" fill="#0d2d18"/>
+              <ellipse cx="360" cy="170" rx="20" ry="16" fill="#091e10"/>
+              <!-- Trekking figure -->
+              <circle cx="200" cy="155" r="8" fill="#fbbf24"/>
+              <rect x="197" y="163" width="6" height="18" fill="#92400e"/>
+              <path d="M197,168 L188,178" stroke="#92400e" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <path d="M203,168 L212,178" stroke="#92400e" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <!-- Walking stick -->
+              <path d="M210,163 L218,185" stroke="#6b3a10" stroke-width="2.5" fill="none"/>
+              <!-- Sun peek -->
+              <circle cx="50" cy="35" r="20" fill="#fbbf24" opacity="0.75"/>
+              <!-- Birds -->
+              <path d="M310,28 Q316,23 322,28" stroke="white" stroke-width="1.5" fill="none"/>
+              <path d="M340,45 Q346,40 352,45" stroke="white" stroke-width="1.5" fill="none"/>
+            </svg>
+            <div class="pkg-badge badge-new">✨ New</div>
+            <div class="pkg-days">3 Days</div>
+          </div>
+          <div class="pkg-body">
+            <div class="pkg-location">📍 Wayanad, Kerala</div>
+            <h3>Wayanad Adventure Tour</h3>
+            <p>Explore cascading waterfalls, ancient caves, dense wildlife forests, and breathtaking hilltop viewpoints in Kerala's most adventurous district.</p>
+            <div class="pkg-highlights">
+              <span class="highlight-tag">💦 Waterfalls</span>
+              <span class="highlight-tag">⛰️ Viewpoints</span>
+              <span class="highlight-tag">🥾 Trekking</span>
+              <span class="highlight-tag">🦁 Wildlife</span>
+            </div>
+          </div>
+          <div class="pkg-footer">
+            <div class="pkg-price">
+              <div class="price-label">Starting from</div>
+              <div class="price-val">₹12,999 <span>/ person</span></div>
+            </div>
+            <button class="pkg-book-btn">Book Now</button>
+          </div>
+        </div>
+
+        <!-- KERALA Card 7: Family Vacation -->
+        <div class="pkg-card" data-category="multiday kerala hills">
+          <div class="pkg-img" style="background: linear-gradient(135deg, #7c2d12, #f97316);">
+            <svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg">
+              <rect width="400" height="200" fill="#7c2d12"/>
+              <!-- Warm sky -->
+              <rect width="400" height="100" fill="#6b2010"/>
+              <!-- Mountains with orange glow -->
+              <polygon points="0,200 80,80 160,200" fill="#9a3516"/>
+              <polygon points="70,200 180,55 290,200" fill="#b84020"/>
+              <polygon points="230,200 320,70 400,130 400,200" fill="#9a3516"/>
+              <!-- Family silhouettes -->
+              <!-- Dad -->
+              <circle cx="160" cy="130" r="12" fill="#3d0f05"/>
+              <rect x="153" y="142" width="14" height="35" fill="#3d0f05" rx="3"/>
+              <path d="M153,150 L140,165" stroke="#3d0f05" stroke-width="4" stroke-linecap="round"/>
+              <path d="M167,150 L180,165" stroke="#3d0f05" stroke-width="4" stroke-linecap="round"/>
+              <!-- Mom -->
+              <circle cx="210" cy="132" r="11" fill="#4a1208"/>
+              <path d="M200,143 Q210,170 220,143Z" fill="#4a1208"/>
+              <path d="M200,148 L188,163" stroke="#4a1208" stroke-width="3.5" stroke-linecap="round"/>
+              <path d="M220,148 L232,163" stroke="#4a1208" stroke-width="3.5" stroke-linecap="round"/>
+              <!-- Kid 1 -->
+              <circle cx="240" cy="148" r="9" fill="#5a1a0a"/>
+              <rect x="234" y="157" width="12" height="25" fill="#5a1a0a" rx="2"/>
+              <!-- Kid 2 (small) -->
+              <circle cx="140" cy="152" r="7" fill="#5a1a0a"/>
+              <rect x="135" y="159" width="10" height="20" fill="#5a1a0a" rx="2"/>
+              <!-- Houseboat in bg -->
+              <rect x="40" y="155" width="80" height="22" fill="#6b3010" rx="4" opacity="0.7"/>
+              <rect x="48" y="142" width="64" height="15" fill="#7a3818" rx="3" opacity="0.7"/>
+              <!-- Water line -->
+              <rect x="0" y="170" width="400" height="30" fill="#6b1a0a" opacity="0.6"/>
+              <path d="M0,170 Q50,163 100,170 Q150,177 200,170 Q250,163 300,170 Q350,177 400,170" fill="#7a2010" opacity="0.5"/>
+              <!-- Sun setting large -->
+              <circle cx="320" cy="55" r="38" fill="#f97316" opacity="0.7"/>
+              <circle cx="320" cy="55" r="28" fill="#fbbf24" opacity="0.6"/>
+              <!-- Coconut trees -->
+              <rect x="350" y="110" width="5" height="45" fill="#3d1a05"/>
+              <ellipse cx="352" cy="108" rx="14" ry="9" fill="#4a5c1a"/>
+              <!-- Birds -->
+              <path d="M80,35 Q86,30 92,35" stroke="white" stroke-width="1.5" fill="none" opacity="0.8"/>
+              <path d="M110,22 Q116,17 122,22" stroke="white" stroke-width="1.5" fill="none" opacity="0.7"/>
+            </svg>
+            <div class="pkg-badge badge-family">💎 Family</div>
+            <div class="pkg-days">4 Days</div>
+          </div>
+          <div class="pkg-body">
+            <div class="pkg-location">📍 Kerala Family Tour</div>
+            <h3>Kerala Family Vacation Package</h3>
+            <p>A tailor-made 4-day family package — Munnar sightseeing, Thekkady elephant encounters, Alleppey houseboat fun, and Kochi city exploration.</p>
+            <div class="pkg-highlights">
+              <span class="highlight-tag">👨‍👩‍👧‍👦 Family Friendly</span>
+              <span class="highlight-tag">🏨 Hotel Stay</span>
+              <span class="highlight-tag">🚖 Cab Included</span>
+              <span class="highlight-tag">🐘 Elephant Show</span>
+            </div>
+          </div>
+          <div class="pkg-footer">
+            <div class="pkg-price">
+              <div class="price-label">Starting from</div>
+              <div class="price-val">₹15,999 <span>/ person</span></div>
+            </div>
+            <button class="pkg-book-btn">Book Now</button>
+          </div>
+        </div>
+
+      </div><!-- end packages-grid -->
+
+      <!-- CUSTOM PACKAGE BANNER -->
+      <div class="custom-banner">
+        <div>
+          <h3>Can't find your <span>perfect trip?</span></h3>
+          <p>Tell us your dream destination, group size, and dates — we'll build a custom package just for you with a dedicated driver-guide.</p>
+        </div>
+        <div class="banner-actions">
+          <a href="tel:+919999999999" class="btn-gold">📞 Call Us Now</a>
+          <a href="#" class="btn-outline">💬 WhatsApp Us</a>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- TRUST STRIP -->
+  <div class="trust-strip">
+    <div class="trust-inner">
+      <div class="trust-item">
+        <span class="trust-icon">🛡️</span>
+        <div><strong>100% Safe Travel</strong><span>Verified drivers & insured rides</span></div>
+      </div>
+      <div class="trust-item">
+        <span class="trust-icon">💰</span>
+        <div><strong>Fixed Package Prices</strong><span>No hidden charges, ever</span></div>
+      </div>
+      <div class="trust-item">
+        <span class="trust-icon">🔄</span>
+        <div><strong>Free Cancellation</strong><span>Cancel up to 24 hrs before</span></div>
+      </div>
+      <div class="trust-item">
+        <span class="trust-icon">🗺️</span>
+        <div><strong>Expert Local Guides</strong><span>Know every corner of Tamil Nadu & Kerala</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <a href="home.html" class="logo" style="font-family:'Poppins',sans-serif;font-weight:800;font-size:1.3rem;color:white;text-decoration:none;">Tourist<span style="color:var(--gold)">Cab</span></a>
+      <ul class="footer-links">
+        <li><a href="home.html">Home</a></li>
+        <li><a href="packages.html">Packages</a></li>
+        <li><a href="outstation.html">Outstation</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+      <div class="footer-copy">© 2025 TouristCab. All rights reserved.</div>
+    </div>
+  </footer>
+
+  <script>
+    function filterPkg(cat, btn) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const cards = document.querySelectorAll('.pkg-card');
+      const labels = document.querySelectorAll('[data-label]');
+
+      let count = 0;
+      cards.forEach(card => {
+        const cats = card.dataset.category || '';
+        const show = cat === 'all' || cats.includes(cat);
+        card.style.display = show ? 'flex' : 'none';
+        if (show) count++;
+      });
+
+      // Show/hide section labels based on visible cards
+      labels.forEach(label => {
+        if (cat === 'all') {
+          label.style.display = 'flex';
+        } else {
+          label.style.display = 'none';
+        }
+      });
+
+      document.getElementById('pkg-count').textContent = count;
+    }
+  </script>
+
+</body>
+</html>
