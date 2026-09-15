@@ -1,15 +1,25 @@
 from django.contrib import admin
 from django.conf    import settings
 
-from .models        import Car, Driver, Booking
+from .models        import Car, Driver, Booking, Attendance
 from .views          import send_whatsapp_template, send_whatsapp_text, _notify_customer_confirmed
+
+
+# ── Attendance Admin ───────────────────────────────────────────────────────────
+
+@admin.register(Attendance)
+class AttendanceAdmin(admin.ModelAdmin):
+    list_display  = ("driver", "date", "check_in", "check_out", "hours_worked")
+    list_filter   = ("date",)
+    search_fields = ("driver__name",)
 
 
 # ── Car Admin ──────────────────────────────────────────────────────────────────
 
 @admin.register(Car)
 class CarAdmin(admin.ModelAdmin):
-    list_display  = ("name", "car_number", "rate_per_km")
+    list_display  = ("name", "car_number", "rate_per_km", "rate_per_km_pax2", "base_fare", "driver_allowance", "max_passengers")
+    list_editable = ("rate_per_km", "rate_per_km_pax2", "base_fare", "driver_allowance", "max_passengers")
     search_fields = ("name", "car_number")
 
 
@@ -17,9 +27,9 @@ class CarAdmin(admin.ModelAdmin):
 
 @admin.register(Driver)
 class DriverAdmin(admin.ModelAdmin):
-    list_display  = ("name", "phone", "is_available")
-    list_filter   = ("is_available",)
-    search_fields = ("name", "phone")
+    list_display  = ("name", "phone", "email", "is_available", "is_on_duty", "is_active", "rate_per_ride")
+    list_filter   = ("is_available", "is_on_duty", "is_active")
+    search_fields = ("name", "phone", "email")
     list_editable = ("is_available",)
 
     def save_model(self, request, obj, form, change):

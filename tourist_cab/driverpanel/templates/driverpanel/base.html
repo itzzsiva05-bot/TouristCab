@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>{% block title %}Driver Panel — TouristCab{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --navy:#0D1B2A; --navy2:#1A2E42; --amber:#F4A62A; --amber2:#E8920E;
+    --cream:#F7F3EE; --grey:#8A9BB0; --white:#FFFFFF; --green:#22c55e; --red:#ef4444; --radius:10px;
+  }
+  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--navy);min-height:100vh;}
+  header{background:var(--navy);color:var(--white);padding:1rem 5%;display:flex;justify-content:space-between;align-items:center;}
+  header .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;}
+  header .logo span{color:var(--amber);}
+  header a.logout{color:var(--grey);text-decoration:none;font-size:.85rem;font-weight:600;border:1px solid var(--grey);padding:.4rem .9rem;border-radius:var(--radius);}
+  header a.logout:hover{color:var(--amber);border-color:var(--amber);}
+  main{max-width:640px;margin:0 auto;padding:1.5rem 1rem 3rem;}
+  .card{background:var(--white);border-radius:var(--radius);padding:1.5rem;box-shadow:0 2px 14px rgba(13,27,42,.08);margin-bottom:1.25rem;}
+  .card h2{font-family:'Syne',sans-serif;font-size:1.05rem;margin-bottom:.75rem;color:var(--navy2);}
+  .badge{display:inline-block;padding:.25rem .7rem;border-radius:99px;font-size:.75rem;font-weight:700;}
+  .badge.on{background:#dcfce7;color:#15803d;}
+  .badge.off{background:#fee2e2;color:#b91c1c;}
+  .row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem;}
+  .btn{border:none;border-radius:var(--radius);padding:.65rem 1.2rem;font-weight:700;font-size:.9rem;cursor:pointer;text-decoration:none;display:inline-block;text-align:center;}
+  .btn-amber{background:var(--amber);color:var(--navy);}
+  .btn-amber:hover{background:var(--amber2);}
+  .btn-green{background:var(--green);color:#fff;}
+  .btn-red{background:var(--red);color:#fff;}
+  .btn-outline{background:transparent;border:1px solid var(--navy2);color:var(--navy2);}
+  .btn-block{width:100%;}
+  .field{margin-bottom:1rem;}
+  .field label{display:block;font-size:.8rem;font-weight:600;color:var(--navy2);margin-bottom:.35rem;}
+  .field input,.field select{width:100%;padding:.65rem .8rem;border:1px solid #dfe4ea;border-radius:var(--radius);font-size:.9rem;font-family:inherit;}
+  .info-line{display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px dashed #eee;font-size:.9rem;}
+  .info-line span:first-child{color:var(--grey);}
+  .msg{padding:.7rem 1rem;border-radius:var(--radius);font-size:.85rem;margin-bottom:1rem;}
+  .msg.success{background:#dcfce7;color:#15803d;}
+  .msg.error{background:#fee2e2;color:#b91c1c;}
+  .msg.info,.msg.warning{background:#fef3c7;color:#92400e;}
+  .empty{color:var(--grey);text-align:center;padding:2rem 0;font-size:.9rem;}
+  .history-item{padding:.6rem 0;border-bottom:1px solid #f1f1f1;font-size:.85rem;display:flex;justify-content:space-between;}
+</style>
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+<header>
+  <div class="logo">Tourist<span>Cab</span> · Driver</div>
+  {% if request.session.driver_id %}<a class="logout" href="{% url 'driver_logout' %}">Logout</a>{% endif %}
+</header>
+<main>
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

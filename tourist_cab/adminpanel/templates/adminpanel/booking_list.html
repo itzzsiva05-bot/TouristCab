@@ -1,0 +1,52 @@
+{% extends "adminpanel/base.html" %}
+{% block title %}Bookings — Admin{% endblock %}
+{% block content %}
+<div class="topbar"><h1>Bookings</h1></div>
+
+<div class="filters">
+  <a href="{% url 'admin_booking_list' %}" class="{% if not status %}active{% endif %}">All</a>
+  {% for code, label in status_choices %}
+    <a href="?status={{ code }}" class="{% if status == code %}active{% endif %}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+<div class="card">
+  <table>
+    <tr><th>#</th><th>Customer</th><th>Route</th><th>Offered to</th><th>Status</th><th>Payment</th><th>Fare</th><th>Actions</th></tr>
+    {% for b in bookings %}
+    <tr>
+      <td>{{ b.id }}</td>
+      <td>{{ b.name }}<br><small>{{ b.phone }}</small></td>
+      <td>{{ b.pickup|truncatechars:16 }} → {{ b.drop|truncatechars:16 }}</td>
+      <td>{% if b.driver %}{{ b.driver.name }}{% else %}—{% endif %}</td>
+      <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
+      <td>{{ b.get_payment_method_display }}</td>
+      <td>₹{{ b.total_fare }}</td>
+      <td>
+        {% if b.status == "waiting" %}
+        <form class="inline" method="post" action="{% url 'admin_booking_skip' b.id %}">
+          {% csrf_token %}<button class="btn btn-outline btn-sm" type="submit">Skip → next driver</button>
+        </form>
+        {% endif %}
+        {% if b.status == "waiting" or b.status == "no_driver" %}
+        <form class="inline" method="post" action="{% url 'admin_booking_assign' b.id %}">
+          {% csrf_token %}
+          <select name="driver_id" style="font-size:.75rem;">
+            {% for d in drivers %}<option value="{{ d.id }}">{{ d.name }}</option>{% endfor %}
+          </select>
+          <button class="btn btn-amber btn-sm" type="submit">Assign</button>
+        </form>
+        {% endif %}
+        {% if b.status != "completed" and b.status != "cancelled" %}
+        <form class="inline" method="post" action="{% url 'admin_booking_cancel' b.id %}">
+          {% csrf_token %}<button class="btn btn-red btn-sm" type="submit">Cancel</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="8">No bookings found.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

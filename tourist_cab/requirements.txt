@@ -19,6 +19,7 @@ django-cloudinary-storage==0.3.0
 django-extensions==4.1
 django-multiupload==0.6.1
 frozenlist==1.8.0
+google-auth==2.35.0
 gunicorn==26.0.0
 idna==3.18
 jmespath==1.1.0

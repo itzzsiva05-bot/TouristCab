@@ -1,0 +1,35 @@
+{% extends "adminpanel/base.html" %}
+{% block title %}Salary — Admin{% endblock %}
+{% block content %}
+<div class="topbar"><h1>Salary — {{ month }}/{{ year }}</h1></div>
+
+<div class="card">
+  <form method="get" style="display:flex;gap:.6rem;align-items:end;margin-bottom:1rem;">
+    <div class="field" style="margin-bottom:0;">
+      <label>Month</label>
+      <select name="month">
+        {% for m in months %}<option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ m }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field" style="margin-bottom:0;">
+      <label>Year</label>
+      <input type="number" name="year" value="{{ year }}" style="width:100px;">
+    </div>
+    <button class="btn btn-amber" type="submit">Filter</button>
+  </form>
+
+  <table>
+    <tr><th>Driver</th><th>Completed rides</th><th>Rate / ride</th><th>Total salary</th></tr>
+    {% for row in rows %}
+    <tr>
+      <td>{{ row.driver.name }}</td>
+      <td>{{ row.rides }}</td>
+      <td>₹{{ row.driver.rate_per_ride }}</td>
+      <td><b>₹{{ row.salary }}</b></td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="4">No active drivers.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

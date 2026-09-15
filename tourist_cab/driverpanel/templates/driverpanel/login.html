@@ -1,0 +1,22 @@
+{% extends "driverpanel/base.html" %}
+{% block title %}Driver Login — TouristCab{% endblock %}
+{% block content %}
+<div class="card" style="max-width:380px;margin:2rem auto;">
+  <h2>Driver Login</h2>
+  <form method="post">
+    {% csrf_token %}
+    <div class="field">
+      <label>Email</label>
+      <input type="email" name="email" required placeholder="you@example.com">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" name="password" required placeholder="••••••••">
+    </div>
+    <button class="btn btn-amber btn-block" type="submit">Login</button>
+  </form>
+  <p style="margin-top:1rem;font-size:.8rem;color:var(--grey);">
+    Don't have login details? Ask your admin — they create every driver account.
+  </p>
+</div>
+{% endblock %}

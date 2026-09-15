@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>My Bookings — TouristCab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{--navy:#0D1B2A;--navy2:#1A2E42;--amber:#F4A62A;--cream:#F7F3EE;--grey:#8A9BB0;}
+  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--navy);min-height:100vh;}
+  header{background:var(--navy);color:#fff;padding:1rem 5%;display:flex;justify-content:space-between;align-items:center;}
+  header .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;}
+  header .logo span{color:var(--amber);}
+  header a{color:var(--grey);text-decoration:none;font-size:.85rem;font-weight:600;}
+  header a:hover{color:var(--amber);}
+  main{max-width:760px;margin:0 auto;padding:2rem 1rem 3rem;}
+  .profile{display:flex;align-items:center;gap:1rem;background:#fff;border-radius:12px;padding:1.3rem;margin-bottom:1.5rem;box-shadow:0 2px 12px rgba(13,27,42,.06);}
+  .profile img{width:56px;height:56px;border-radius:50%;}
+  .profile h2{font-family:'Syne',sans-serif;font-size:1.1rem;}
+  .profile p{color:var(--grey);font-size:.85rem;}
+  .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem;}
+  .stat{background:#fff;border-radius:12px;padding:1rem;text-align:center;box-shadow:0 2px 10px rgba(13,27,42,.06);}
+  .stat .num{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;color:var(--navy2);}
+  .stat .label{font-size:.75rem;color:var(--grey);}
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(13,27,42,.06);}
+  th,td{padding:.7rem .9rem;text-align:left;font-size:.85rem;border-bottom:1px solid #f0f0f0;}
+  th{background:var(--navy2);color:#fff;font-weight:600;}
+  .badge{display:inline-block;padding:.2rem .6rem;border-radius:99px;font-size:.72rem;font-weight:700;}
+  .badge.waiting{background:#fef3c7;color:#92400e;}
+  .badge.confirmed{background:#dbeafe;color:#1e40af;}
+  .badge.completed{background:#dcfce7;color:#15803d;}
+  .badge.cancelled,.badge.rejected,.badge.no_driver{background:#fee2e2;color:#b91c1c;}
+  .empty{text-align:center;color:var(--grey);padding:2rem 0;background:#fff;border-radius:12px;}
+
+  /* ── account menu (email + dropdown) ── */
+  .account-menu{position:relative;}
+  .account-trigger{display:flex;align-items:center;gap:.4rem;background:none;border:none;color:var(--grey);font-size:.85rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
+  .account-trigger:hover{color:var(--amber);}
+  .account-trigger .chev{font-size:.65rem;transition:transform .15s;}
+  .account-menu.open .account-trigger .chev{transform:rotate(180deg);}
+  .account-dropdown{display:none;position:absolute;right:0;top:calc(100% + .6rem);background:#fff;color:var(--navy);border-radius:10px;min-width:190px;box-shadow:0 8px 24px rgba(13,27,42,.18);overflow:hidden;z-index:50;}
+  .account-menu.open .account-dropdown{display:block;}
+  .account-dropdown .ad-email{padding:.7rem .9rem;font-size:.78rem;color:var(--grey);border-bottom:1px solid #f0f0f0;word-break:break-all;}
+  .account-dropdown a{display:block;padding:.65rem .9rem;font-size:.85rem;color:var(--navy);text-decoration:none;font-weight:600;}
+  .account-dropdown a:hover{background:var(--cream);color:var(--amber2, var(--amber));}
+
+  /* ── track / driver details ── */
+  .track-btn{background:var(--amber);color:var(--navy);border:none;padding:.35rem .8rem;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;}
+  .track-panel{display:none;background:#fbfaf8;padding:1rem;}
+  .track-panel.open{display:table-row;}
+  .driver-card{display:flex;align-items:center;gap:1rem;background:#fff;border-radius:10px;padding:.9rem;border:1px solid #eee;margin-bottom:.9rem;}
+  .driver-card img{width:56px;height:56px;border-radius:50%;object-fit:cover;background:#eee;border:2px solid var(--amber);}
+  .driver-card .dname{font-weight:700;font-size:.95rem;}
+  .driver-card .dmeta{font-size:.8rem;color:var(--grey);margin-top:.15rem;}
+  .track-wa{display:inline-flex;align-items:center;gap:.4rem;background:#25d366;color:#fff;text-decoration:none;font-size:.8rem;font-weight:700;padding:.5rem .9rem;border-radius:7px;margin-bottom:.9rem;}
+  .live-map-wrap{border:1px solid #eee;border-radius:10px;overflow:hidden;}
+  .live-map-head{display:flex;align-items:center;gap:.4rem;background:var(--navy);color:#fff;font-size:.78rem;font-weight:700;padding:.5rem .8rem;}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:blink 1.2s infinite;}
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:.3;}}
+  .track-map{width:100%;height:230px;}
+  .no-track{font-size:.82rem;color:var(--grey);padding:.5rem 0;}
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+</head>
+<body>
+<header>
+  <div class="logo">Tourist<span>Cab</span></div>
+  <div style="display:flex;align-items:center;gap:1.2rem;">
+    <a href="/">Home</a>
+    <div class="account-menu" id="accountMenu">
+      <button type="button" class="account-trigger" onclick="document.getElementById('accountMenu').classList.toggle('open')">
+        {{ customer.email }} <span class="chev">▾</span>
+      </button>
+      <div class="account-dropdown">
+        <div class="ad-email">{{ customer.email }}</div>
+        <a href="{% url 'customer_dashboard' %}">Dashboard</a>
+        <a href="{% url 'customer_dashboard' %}#profile-section">Profile</a>
+        <a href="{% url 'customer_logout' %}">Logout</a>
+      </div>
+    </div>
+  </div>
+</header>
+<main>
+  <div class="profile" id="profile-section">
+    {% if customer.photo_url %}<img src="{{ customer.photo_url }}" alt="">{% endif %}
+    <div>
+      <h2>{{ customer.name }}</h2>
+      <p>{{ customer.email }}</p>
+    </div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat"><div class="num">{{ bookings|length }}</div><div class="label">Total bookings</div></div>
+    <div class="stat"><div class="num">₹{{ total_spent }}</div><div class="label">Total paid (completed)</div></div>
+    <div class="stat"><div class="num">{{ bookings.0.status|default:"—" }}</div><div class="label">Latest status</div></div>
+  </div>
+
+  <table>
+    <tr><th>#</th><th>Route</th><th>Date</th><th>Driver</th><th>Payment</th><th>Fare</th><th>Status</th><th></th></tr>
+    {% for b in bookings %}
+    <tr>
+      <td>{{ forloop.counter }}</td>
+      <td>{{ b.pickup|truncatechars:18 }} → {{ b.drop|truncatechars:18 }}</td>
+      <td>{{ b.date }}</td>
+      <td>{% if b.driver %}{{ b.driver.name }}{% else %}—{% endif %}</td>
+      <td>{{ b.get_payment_method_display }}</td>
+      <td>₹{{ b.total_fare }}</td>
+      <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
+      <td>
+        {% if b.status == "confirmed" and b.driver %}
+        <button class="track-btn" onclick="toggleTrack({{ b.id }})">Track</button>
+        {% endif %}
+      </td>
+    </tr>
+    {% if b.status == "confirmed" and b.driver %}
+    <tr class="track-panel" id="track-{{ b.id }}">
+      <td colspan="8">
+        <div class="driver-card">
+          {% if b.driver.photo %}<img src="{{ b.driver.photo.url }}" alt="">{% else %}<div style="width:56px;height:56px;border-radius:50%;background:var(--cream);border:2px solid var(--amber);"></div>{% endif %}
+          <div>
+            <div class="dname">{{ b.driver.name }}</div>
+            <div class="dmeta">📞 {{ b.driver.phone }}</div>
+            <div class="dmeta">🚗 {% if b.driver.car %}{{ b.driver.car.name }} — {{ b.driver.car.car_number }}{% else %}Car details coming soon{% endif %}</div>
+          </div>
+        </div>
+        <a class="track-wa" href="https://wa.me/{{ b.driver.phone|cut:'+' }}" target="_blank">💬 Message driver on WhatsApp</a>
+        <div class="live-map-wrap">
+          <div class="live-map-head"><span class="live-dot"></span> Live driver location</div>
+          <div class="track-map" id="map-{{ b.id }}"></div>
+        </div>
+        <div class="no-track" id="notrack-{{ b.id }}" style="display:none;">Live location isn't available for this driver right now.</div>
+      </td>
+    </tr>
+    {% endif %}
+    {% empty %}
+    <tr><td colspan="8">No bookings yet.</td></tr>
+    {% endfor %}
+  </table>
+
+  {% if not bookings %}
+  <div class="empty" style="margin-top:1rem;">
+    <p>You haven't booked a ride yet.</p>
+    <p style="margin-top:.5rem;"><a href="/book/" style="color:var(--amber);font-weight:700;text-decoration:none;">Book your first ride →</a></p>
+  </div>
+  {% endif %}
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+// Close the account dropdown when clicking outside it
+document.addEventListener('click', function (e) {
+  const menu = document.getElementById('accountMenu');
+  if (menu && !menu.contains(e.target)) menu.classList.remove('open');
+});
+
+const trackMaps = {};    // bookingId -> Leaflet map
+const trackMarkers = {}; // bookingId -> Leaflet marker
+const trackTimers = {};  // bookingId -> interval id
+
+function toggleTrack(bookingId) {
+  const panel = document.getElementById('track-' + bookingId);
+  if (!panel) return;
+  const isOpen = panel.classList.contains('open');
+
+  if (isOpen) {
+    panel.classList.remove('open');
+    if (trackTimers[bookingId]) { clearInterval(trackTimers[bookingId]); delete trackTimers[bookingId]; }
+    return;
+  }
+
+  panel.classList.add('open');
+  if (!trackMaps[bookingId]) {
+    setTimeout(() => initTrackMap(bookingId), 50); // let the row render before sizing the map
+  } else {
+    trackMaps[bookingId].invalidateSize();
+  }
+  pollDriverLocation(bookingId);
+  trackTimers[bookingId] = setInterval(() => pollDriverLocation(bookingId), 8000);
+}
+
+function initTrackMap(bookingId) {
+  const el = document.getElementById('map-' + bookingId);
+  if (!el || trackMaps[bookingId]) return;
+  const map = L.map(el, { zoomControl: true, attributionControl: true }).setView([20.5937, 78.9629], 5);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  }).addTo(map);
+  trackMaps[bookingId] = map;
+}
+
+async function pollDriverLocation(bookingId) {
+  try {
+    const res = await fetch(`/driver-location/${bookingId}/`);
+    const data = await res.json();
+    const notrack = document.getElementById('notrack-' + bookingId);
+    const mapEl = document.getElementById('map-' + bookingId);
+
+    if (!data.ok || data.lat == null || data.lon == null) {
+      if (notrack) notrack.style.display = 'block';
+      if (mapEl) mapEl.style.display = 'none';
+      return;
+    }
+    if (notrack) notrack.style.display = 'none';
+    if (mapEl) mapEl.style.display = 'block';
+
+    if (!trackMaps[bookingId]) initTrackMap(bookingId);
+    const map = trackMaps[bookingId];
+    map.invalidateSize();
+    map.setView([data.lat, data.lon], 14);
+
+    if (!trackMarkers[bookingId]) {
+      trackMarkers[bookingId] = L.marker([data.lat, data.lon]).addTo(map);
+    } else {
+      trackMarkers[bookingId].setLatLng([data.lat, data.lon]);
+    }
+  } catch (err) {
+    console.error('Live location fetch failed', err);
+  }
+}
+</script>
+</body>
+</html>

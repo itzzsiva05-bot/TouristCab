@@ -127,6 +127,34 @@
       footer { grid-template-columns: 1fr; }
       .nav-links { display: none; }
     }
+
+    /* ── account menu (email + dropdown) ── */
+    .account-menu { position: relative; }
+    .account-trigger {
+      display: flex; align-items: center; gap: .4rem;
+      background: transparent; border: 1px solid var(--amber); color: var(--amber);
+      padding: .5rem 1rem; border-radius: var(--radius);
+      font-family: 'Inter', sans-serif; font-size: .8rem; font-weight: 600;
+      cursor: pointer; max-width: 190px;
+    }
+    .account-trigger span.email-txt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .account-trigger .chev { font-size: .65rem; transition: transform .15s; flex-shrink: 0; }
+    .account-menu.open .account-trigger .chev { transform: rotate(180deg); }
+    .account-dropdown {
+      display: none; position: absolute; right: 0; top: calc(100% + .6rem);
+      background: var(--white); color: var(--navy); border-radius: 10px;
+      min-width: 190px; box-shadow: 0 8px 24px rgba(13,27,42,.25); overflow: hidden; z-index: 200;
+    }
+    .account-menu.open .account-dropdown { display: block; }
+    .account-dropdown .ad-email {
+      padding: .7rem .9rem; font-size: .78rem; color: var(--grey);
+      border-bottom: 1px solid #f0f0f0; word-break: break-all;
+    }
+    .account-dropdown a {
+      display: block; padding: .65rem .9rem; font-size: .85rem;
+      color: var(--navy); text-decoration: none; font-weight: 600;
+    }
+    .account-dropdown a:hover { background: var(--cream); color: var(--amber2); }
   </style>
   {% block extra_head %}{% endblock %}
 </head>
@@ -142,6 +170,22 @@
     <li><a href="/rentals/">Rentals</a></li>
     <li><a href="/contact/">Contact</a></li>
   </ul>
+  {% if request.session.customer_id %}
+    <div class="account-menu" id="accountMenu">
+      <button type="button" class="account-trigger" onclick="document.getElementById('accountMenu').classList.toggle('open')">
+        <span class="email-txt">{{ request.session.customer_email|default:request.session.customer_name }}</span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="account-dropdown">
+        <div class="ad-email">{{ request.session.customer_email }}</div>
+        <a href="/login/customer/dashboard/">Dashboard</a>
+        <a href="/login/customer/dashboard/#profile-section">Profile</a>
+        <a href="/login/customer/logout/">Logout</a>
+      </div>
+    </div>
+  {% else %}
+    <a class="nav-cta" href="/login/" style="margin-right:.6rem;background:transparent;border:1px solid #F4A62A;color:#F4A62A;">Customer Login</a>
+  {% endif %}
   <a class="nav-cta" href="/book/">Book Now</a>
 </nav>
 
@@ -176,6 +220,13 @@
 </footer>
 
 {% block scripts %}{% endblock %}
+
+<script>
+  document.addEventListener('click', function (e) {
+    var menu = document.getElementById('accountMenu');
+    if (menu && !menu.contains(e.target)) menu.classList.remove('open');
+  });
+</script>
 
 </body>
 </html>

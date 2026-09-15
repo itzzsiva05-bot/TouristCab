@@ -6,6 +6,7 @@ from datetime import timedelta, datetime
 import requests
 
 from django.conf                    import settings
+from django.core.mail               import send_mail
 from django.http                    import JsonResponse, HttpResponse
 from django.utils                   import timezone
 from django.views.decorators.csrf   import csrf_exempt
@@ -99,7 +100,11 @@ def home(request):
 
 def book_ride(request):
     cars = Car.objects.all()
-    return render(request, "bookings/book_ride.html", {"cars": cars})
+    response = render(request, "bookings/book_ride.html", {"cars": cars})
+    # This page changes often during testing/updates — stop the browser from
+    # serving a stale cached copy on back/refresh so fixes always show up.
+    response["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    return response
 
 def airport_taxi(request):
     return render(request, "bookings/home.html")
@@ -121,7 +126,7 @@ def packages(request):
 
 
 # ─────────────────────────────────────────────
-# OTP: Send
+# OTP: Send (via email)
 # ─────────────────────────────────────────────
 
 @require_POST
@@ -129,35 +134,53 @@ def packages(request):
 def send_otp(request):
     try:
         data  = json.loads(request.body)
-        phone = data.get("phone", "").strip()
-        if not phone:
-            return JsonResponse({"ok": False, "error": "Phone number missing."})
+        email = data.get("email", "").strip().lower()
+        if not email or "@" not in email:
+            return JsonResponse({"ok": False, "error": "Valid email address venum."})
 
         otp = str(random.randint(100000, 999999))
-        request.session[f"otp_{phone}"] = {
+        request.session[f"otp_{email}"] = {
             "code":    otp,
             "expires": (timezone.now() + timedelta(minutes=5)).isoformat(),
         }
 
         if settings.DEBUG:
             print(f"\n{'='*40}")
-            print(f"OTP for {phone}: {otp}")
+            print(f"OTP for {email}: {otp}")
             print(f"{'='*40}\n")
-            return JsonResponse({"ok": True})
 
-        send_whatsapp_template(phone, settings.META_TEMPLATE_OTP, body_params=[otp])
+        email_configured = bool(settings.EMAIL_HOST_USER and settings.EMAIL_HOST_PASSWORD)
+
+        if not email_configured:
+            if settings.DEBUG:
+                # No SMTP creds set locally — OTP is printed above so dev can still test.
+                return JsonResponse({"ok": True})
+            return JsonResponse({"ok": False, "error": "Email service not configured. Please contact support."})
+
+        try:
+            send_mail(
+                subject        = "Your TouristCab verification code",
+                message        = f"Your OTP for TouristCab booking is: {otp}\n\nThis code expires in 5 minutes.",
+                from_email     = settings.DEFAULT_FROM_EMAIL,
+                recipient_list = [email],
+                fail_silently  = False,
+            )
+        except Exception:
+            logger.exception("send_otp: sending email failed")
+            if settings.DEBUG:
+                # OTP is already in the console above, so let dev testing continue.
+                return JsonResponse({"ok": True})
+            return JsonResponse({"ok": False, "error": "Couldn't send OTP right now. Please try again."})
+
         return JsonResponse({"ok": True})
 
-    except requests.HTTPError:
-        logger.exception("send_otp HTTP error")
-        return JsonResponse({"ok": False, "error": "Couldn't send OTP right now. Please try again."})
     except Exception:
         logger.exception("send_otp error")
         return JsonResponse({"ok": False, "error": "Couldn't send OTP right now. Please try again."})
 
 
 # ─────────────────────────────────────────────
-# OTP: Verify
+# OTP: Verify (via email)
 # ─────────────────────────────────────────────
 
 @require_POST
@@ -165,10 +188,10 @@ def send_otp(request):
 def verify_otp(request):
     try:
         data  = json.loads(request.body)
-        phone = data.get("phone", "").strip()
+        email = data.get("email", "").strip().lower()
         otp   = data.get("otp",   "").strip()
 
-        session_data = request.session.get(f"otp_{phone}")
+        session_data = request.session.get(f"otp_{email}")
         if not session_data:
             return JsonResponse({"ok": False, "error": "OTP not sent or expired. Please resend."})
 
@@ -179,8 +202,8 @@ def verify_otp(request):
         if session_data["code"] != otp:
             return JsonResponse({"ok": False, "error": "Wrong OTP. Please try again."})
 
-        request.session[f"otp_verified_{phone}"] = True
-        del request.session[f"otp_{phone}"]
+        request.session[f"otp_verified_{email}"] = True
+        del request.session[f"otp_{email}"]
         return JsonResponse({"ok": True})
 
     except Exception:
@@ -199,9 +222,10 @@ def submit_booking(request):
     try:
         data  = json.loads(request.body)
         phone = data.get("phone", "").strip()
+        email = data.get("email", "").strip().lower()
 
-        if not request.session.get(f"otp_verified_{phone}"):
-            return JsonResponse({"ok": False, "error": "Phone not verified."})
+        if not email or not request.session.get(f"otp_verified_{email}"):
+            return JsonResponse({"ok": False, "error": "Email not verified."})
 
         date_str = data.get("date", "").strip()
         time_str = data.get("time", "").strip()
@@ -212,10 +236,17 @@ def submit_booking(request):
 
         car = Car.objects.filter(id=data.get("car_id")).first()
 
+        customer = None
+        customer_id = request.session.get("customer_id")
+        if customer_id:
+            from accounts.models import Customer
+            customer = Customer.objects.filter(id=customer_id).first()
+
         booking = Booking.objects.create(
             name        = data.get("name", ""),
             phone       = phone,
             email       = data.get("email", ""),
+            customer    = customer,
             pickup      = data.get("pickup", ""),
             drop        = data.get("drop", ""),
             pickup_lat  = data.get("pickup_lat") or None,
@@ -229,14 +260,22 @@ def submit_booking(request):
             luggage     = int(data.get("luggage", 0)),
             car         = car,
             total_fare  = float(data.get("total_fare", 0)),
+            payment_method = data.get("payment_method", "cash"),
             status      = "waiting",
         )
 
-        # FIX: WhatsApp fail ஆனாலும் booking confirm ஆகும்
-        try:
-            _notify_drivers(booking)
-        except Exception:
-            logger.exception(f"_notify_drivers failed for booking #{booking.id} — booking saved anyway")
+        # One-by-one assignment: offer the ride to the first available driver.
+        # If that driver rejects (from their dashboard), the booking automatically
+        # moves on to the next available driver — see Booking.assign_next_driver().
+        driver = booking.assign_next_driver()
+
+        # Best-effort WhatsApp nudge to the driver currently offered the ride
+        # (the driver also sees & can accept/reject it from their own dashboard).
+        if driver:
+            try:
+                _notify_single_driver(booking, driver)
+            except Exception:
+                logger.exception(f"WhatsApp notify failed for booking #{booking.id} — booking saved anyway")
 
         return JsonResponse({"ok": True, "booking_id": booking.id})
 
@@ -252,12 +291,25 @@ def submit_booking(request):
 # Notify drivers
 # ─────────────────────────────────────────────
 
-def _notify_drivers(booking: Booking):
-    drivers = Driver.objects.filter(is_available=True)
-    if not drivers.exists():
-        logger.warning(f"No available drivers for booking #{booking.id}")
-        return
+def _notify_single_driver(booking: Booking, driver: Driver):
+    """Send the ride request (WhatsApp, best-effort) to ONE driver at a time.
+    The driver's own dashboard (driverpanel app) is the primary way they
+    accept/reject; this WhatsApp message is just a backup nudge."""
+    body_params, date_str, booking_time = _booking_notify_params(booking)
+    button_params = [
+        f"{booking.id}/accept/?driver_id={driver.id}",
+        f"{booking.id}/reject/?driver_id={driver.id}",
+    ]
+    send_whatsapp_template(
+        driver.phone,
+        settings.META_TEMPLATE_DRIVER_REQUEST,
+        body_params=body_params,
+        button_params=button_params,
+    )
+    logger.info(f"Driver #{driver.id} ({driver.name}) notified for booking #{booking.id}")
 
+
+def _booking_notify_params(booking: Booking):
     # FIX: time — string "10:00" or time object — both handle பண்ணு
     if hasattr(booking.time, 'strftime'):
         booking_time = booking.time.strftime("%I:%M %p")
@@ -292,21 +344,7 @@ def _notify_drivers(booking: Booking):
         f"₹{booking.total_fare}",
     ]
 
-    for driver in drivers:
-        try:
-            button_params = [
-                f"{booking.id}/accept/?driver_id={driver.id}",
-                f"{booking.id}/reject/?driver_id={driver.id}",
-            ]
-            send_whatsapp_template(
-                driver.phone,
-                settings.META_TEMPLATE_DRIVER_REQUEST,
-                body_params=body_params,
-                button_params=button_params,
-            )
-            logger.info(f"Driver #{driver.id} ({driver.name}) notified for booking #{booking.id}")
-        except Exception:
-            logger.exception(f"Failed to notify driver #{driver.id} for booking #{booking.id}")
+    return body_params, date_str, booking_time
 
 
 # ─────────────────────────────────────────────
@@ -434,9 +472,23 @@ def driver_action(request, booking_id, action):
         """, content_type="text/html")
 
     else:
-        booking.status = "rejected"
-        booking.save(update_fields=["status"])
-        logger.info(f"Booking #{booking_id} rejected via driver link")
+        driver_id = request.GET.get("driver_id")
+        rejecting_driver = Driver.objects.filter(id=driver_id).first() if driver_id else booking.driver
+
+        if rejecting_driver:
+            booking.rejected_by.add(rejecting_driver)
+
+        next_driver = booking.assign_next_driver()
+        logger.info(f"Booking #{booking_id} rejected via driver link — next driver: {next_driver}")
+
+        if next_driver:
+            try:
+                _notify_single_driver(booking, next_driver)
+            except Exception:
+                logger.exception(f"WhatsApp notify failed for booking #{booking.id} next driver")
+            msg = f"Booking <b>#{booking_id}</b> passed on to the next available driver."
+        else:
+            msg = f"Booking <b>#{booking_id}</b> rejected. No other driver is available right now."
 
         return HttpResponse(f"""
             <html>
@@ -444,8 +496,7 @@ def driver_action(request, booking_id, action):
             <body style="font-family:sans-serif;text-align:center;padding:3rem;background:#f9f9f9;">
               <div style="max-width:400px;margin:auto;background:#fff;padding:2rem;border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,.08);">
                 <h1 style="color:#ef4444;">❌ Ride Rejected</h1>
-                <p>Booking <b>#{booking_id}</b> has been rejected.</p>
-                <p style="color:#888;">The customer will be notified.</p>
+                <p>{msg}</p>
               </div>
             </body></html>
         """, content_type="text/html")

@@ -23,6 +23,12 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['touristcab.onrender.com', '127.0.0.1', 'localhost']
 
+# Django's SecurityMiddleware sends "Cross-Origin-Opener-Policy: same-origin"
+# by default, which breaks Google Sign-In's popup flow (window.opener becomes
+# null, so it can't postMessage the result back). "same-origin-allow-popups"
+# keeps the isolation benefit but still lets popups you open talk back to you.
+SECURE_CROSS_ORIGIN_OPENER_POLICY = "same-origin-allow-popups"
+
 
 
 
@@ -39,6 +45,8 @@ INSTALLED_APPS = [
     'accounts',
     'bookings',
     'drivers',
+    'driverpanel',
+    'adminpanel',
 ]
 
 MIDDLEWARE = [
@@ -109,7 +117,6 @@ STATIC_URL  = 'static/'
 MEDIA_URL   = '/media/'
 MEDIA_ROOT  = BASE_DIR / 'media'
 
-
 # ─────────────────────────────────────────────
 #  GOOGLE MAPS
 # ─────────────────────────────────────────────
@@ -117,6 +124,15 @@ GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')
 if not GOOGLE_MAPS_API_KEY:
     import warnings
     warnings.warn("GOOGLE_MAPS_API_KEY is not set. Maps will not work.")
+
+
+# ─────────────────────────────────────────────
+#  GOOGLE SIGN-IN (customer login)
+# ─────────────────────────────────────────────
+# Get this from https://console.cloud.google.com/apis/credentials
+# (OAuth 2.0 Client ID -> Web application -> add http://127.0.0.1:8000 as an
+# authorized JavaScript origin). Paste the Client ID into .env as GOOGLE_CLIENT_ID.
+GOOGLE_CLIENT_ID = os.environ.get('GOOGLE_CLIENT_ID', '')
 
 
 # ─────────────────────────────────────────────
@@ -135,6 +151,24 @@ META_TEMPLATE_OTP                = os.environ.get('META_TEMPLATE_OTP',          
 META_TEMPLATE_DRIVER_REQUEST     = os.environ.get('META_TEMPLATE_DRIVER_REQUEST',     'driver_request')
 META_TEMPLATE_CUSTOMER_CONFIRMED = os.environ.get('META_TEMPLATE_CUSTOMER_CONFIRMED', 'customer_confirmed')
 META_TEMPLATE_DRIVER_WELCOME     = os.environ.get('META_TEMPLATE_DRIVER_WELCOME',     'driver_welcome')
+
+
+# ─────────────────────────────────────────────
+#  EMAIL (SMTP) — used for customer OTP verification
+# ─────────────────────────────────────────────
+EMAIL_BACKEND       = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST          = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT          = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS       = True
+EMAIL_HOST_USER     = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+DEFAULT_FROM_EMAIL  = f"TouristCab <{EMAIL_HOST_USER}>" if EMAIL_HOST_USER else None
+# Without this, a slow/unreachable SMTP server can hang the whole request
+# (and the "Send OTP" button) indefinitely instead of failing with an error.
+EMAIL_TIMEOUT       = 15
+
+if not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD:
+    warnings.warn("EMAIL_HOST_USER or EMAIL_HOST_PASSWORD is not set. Email OTP will not work.")
 
 
 # ─────────────────────────────────────────────

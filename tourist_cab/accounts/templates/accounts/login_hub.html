@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Login — TouristCab</title>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:#0D1B2A;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;}
+  .card{background:#fff;border-radius:14px;padding:2.2rem;width:100%;max-width:380px;}
+  .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;color:#0D1B2A;margin-bottom:.35rem;text-align:center;}
+  .logo span{color:#F4A62A;}
+  p.sub{text-align:center;color:#8A9BB0;font-size:.82rem;margin-bottom:1.5rem;}
+  .field{margin-bottom:1rem;}
+  .field label{display:block;font-size:.8rem;font-weight:600;color:#1A2E42;margin-bottom:.35rem;}
+  .field input{width:100%;padding:.65rem .8rem;border:1px solid #dfe4ea;border-radius:8px;font-size:.9rem;font-family:inherit;}
+  .btn{width:100%;border:none;border-radius:8px;padding:.7rem;font-weight:700;font-size:.9rem;cursor:pointer;background:#F4A62A;color:#0D1B2A;}
+  .btn:hover{background:#E8920E;}
+  .msg{padding:.6rem .9rem;border-radius:8px;font-size:.82rem;margin-bottom:1rem;background:#fee2e2;color:#b91c1c;}
+  .msg.success{background:#dcfce7;color:#15803d;}
+  .msg.info,.msg.warning{background:#fef3c7;color:#92400e;}
+  .divider{display:flex;align-items:center;gap:.7rem;margin:1.3rem 0;color:#8A9BB0;font-size:.78rem;}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:#e5e7eb;}
+  .g-slot{display:flex;justify-content:center;}
+  .warn{background:#fef3c7;color:#92400e;padding:.6rem .9rem;border-radius:8px;font-size:.78rem;margin-top:.5rem;text-align:left;}
+  .back{display:block;text-align:center;color:#8A9BB0;text-decoration:none;font-size:.82rem;margin-top:1.3rem;}
+  .back:hover{color:#E8920E;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Tourist<span>Cab</span></div>
+  <p class="sub">Admin, Driver or Customer — sign in below.</p>
+
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="field"><label>Email</label><input type="email" name="email" placeholder="you@example.com" autofocus></div>
+    <div class="field"><label>Password</label><input type="password" name="password" placeholder="••••••••"></div>
+    <button class="btn" type="submit">Login</button>
+  </form>
+
+  <div class="divider">OR</div>
+
+  {% if google_client_id %}
+    <div id="g_id_onload"
+         data-client_id="{{ google_client_id }}"
+         data-callback="handleGoogleCredential"
+         data-auto_prompt="false">
+    </div>
+    <div class="g-slot">
+      <div class="g_id_signin" data-type="standard" data-size="large" data-theme="outline" data-shape="pill" data-text="continue_with" data-width="300"></div>
+    </div>
+    <div id="error-box"></div>
+  {% else %}
+    <div class="warn">Google sign-in isn't configured yet. Admin needs to add <code>GOOGLE_CLIENT_ID</code> to the <code>.env</code> file (get one at console.cloud.google.com/apis/credentials).</div>
+  {% endif %}
+
+  <a class="back" href="/">← Back to home</a>
+</div>
+
+<script>
+function getCookie(name) {
+  const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+  return v ? v.pop() : '';
+}
+
+function handleGoogleCredential(response) {
+  fetch("{% url 'google_auth_callback' %}", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      "X-CSRFToken": getCookie("csrftoken"),
+    },
+    body: "credential=" + encodeURIComponent(response.credential)
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) {
+      window.location.href = data.redirect || "/";
+    } else {
+      document.getElementById("error-box").innerHTML =
+        '<div class="warn">' + (data.error || "Google login failed") + '</div>';
+    }
+  })
+  .catch(() => {
+    document.getElementById("error-box").innerHTML = '<div class="warn">Network error. Try again.</div>';
+  });
+}
+</script>
+</body>
+</html>

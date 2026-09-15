@@ -74,6 +74,28 @@
     }
     .nav-cta:hover { background:var(--gold2); }
 
+    /* ── account menu (email + dropdown) ── */
+    .account-menu { position: relative; display: inline-block; }
+    .account-trigger {
+      display: inline-flex; align-items: center; gap: .4rem;
+      background: transparent; border: 1px solid var(--gold); color: var(--gold);
+      padding: 9px 18px; border-radius: 50px;
+      font-family: inherit; font-size: .82rem; font-weight: 700;
+      cursor: pointer; max-width: 190px;
+    }
+    .account-trigger .email-txt { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .account-trigger .chev { font-size:.65rem; transition: transform .15s; flex-shrink:0; }
+    .account-menu.open .account-trigger .chev { transform: rotate(180deg); }
+    .account-dropdown {
+      display:none; position:absolute; right:0; top:calc(100% + .6rem);
+      background:#fff; color:var(--navy); border-radius:10px; min-width:190px;
+      box-shadow:0 8px 24px rgba(10,22,40,.25); overflow:hidden; z-index:400; text-align:left;
+    }
+    .account-menu.open .account-dropdown { display:block; }
+    .account-dropdown .ad-email { padding:.7rem .9rem; font-size:.75rem; color:#8A9BB0; border-bottom:1px solid #f0f0f0; word-break:break-all; }
+    .account-dropdown a { display:block; padding:.65rem .9rem; font-size:.85rem; color:var(--navy); text-decoration:none; font-weight:600; cursor:pointer; }
+    .account-dropdown a:hover { background:#f7f3ee; color:var(--gold2); }
+
     /* STATE TABS INSIDE CABS DROPDOWN */
     .state-tabs { display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
     .state-tab {
@@ -142,6 +164,12 @@
     .booking-bar { background:var(--white); box-shadow:0 -4px 40px rgba(10,22,40,0.12); padding:28px 6%; }
     .booking-inner { max-width:1100px; margin:0 auto; display:grid; grid-template-columns:1fr 1fr 1fr auto; gap:16px; align-items:end; }
     .field-group label { display:block; font-size:0.75rem; font-weight:600; color:var(--slate); text-transform:uppercase; letter-spacing:0.6px; margin-bottom:8px; }
+    .field-group { position: relative; }
+    .ac-dropdown { position:absolute; top:100%; left:0; right:0; background:#fff; border:1.5px solid var(--gold); border-top:none; border-radius:0 0 6px 6px; z-index:80; max-height:220px; overflow-y:auto; box-shadow:0 6px 16px rgba(10,22,40,.15); text-align:left; }
+    .ac-item { padding:.6rem .85rem; font-size:.85rem; cursor:pointer; border-bottom:1px solid #eee; color:var(--navy); }
+    .ac-item:last-child { border-bottom:none; }
+    .ac-item:hover { background:#f7f3ee; }
+    .ac-loading { padding:.6rem .85rem; font-size:.8rem; color:#8A9BB0; }
     .field-group input, .field-group select {
       width:100%; padding:12px 16px; border:1.5px solid #E2E8F0; border-radius:var(--radius);
       font-family:'Inter',sans-serif; font-size:0.95rem; color:var(--navy); outline:none; transition:border-color 0.2s; background:var(--white);
@@ -520,7 +548,6 @@
       <div class="drop-panel simple">
         <ul class="simple-list">
           <li><a onclick="closeAllDrops();showHome()">🚕 City Rides</a></li>
-          <li><a onclick="closeAllDrops();showHome()">✈️ Airport Transfer</a></li>
           <li><a onclick="closeAllDrops();showHome()">🗺️ Tourist Packages</a></li>
           <li><a onclick="closeAllDrops();showHome()">🚐 Outstation Trips</a></li>
         </ul>
@@ -597,7 +624,22 @@
     <li><a onclick="closeAllDrops();document.getElementById('how-section')&&document.getElementById('how-section').scrollIntoView({behavior:'smooth'})">How It Works</a></li>
     <li><a onclick="closeAllDrops();openBookingModal({title:'Contact Us',type:'General'})">Contact</a></li>
   </ul>
-  <a href="{%url 'book_ride'%}"  class="nav-cta" onclick="closeAllDrops();openBookingModal({title:'Book a Ride',type:'General'})">Book a Ride</a>
+  {% if request.session.customer_id %}
+    <div class="account-menu" id="accountMenu">
+      <button type="button" class="account-trigger" onclick="event.stopPropagation();document.getElementById('accountMenu').classList.toggle('open')">
+        <span class="email-txt">{{ request.session.customer_email|default:request.session.customer_name }}</span>
+        <span class="chev">▾</span>
+      </button>
+      <div class="account-dropdown">
+        <div class="ad-email">{{ request.session.customer_email }}</div>
+        <a href="/login/customer/dashboard/">Dashboard</a>
+        <a href="/login/customer/dashboard/#profile-section">Profile</a>
+        <a href="/login/customer/logout/">Logout</a>
+      </div>
+    </div>
+  {% else %}
+    <a href="/login/" class="nav-cta" style="background:transparent;border:1px solid var(--gold);color:var(--gold);">Customer Login</a>
+  {% endif %}
 </nav>
 
 <!-- ═══ HOME PAGE ═══ -->
@@ -609,7 +651,7 @@
       <h1>Travel Smarter,<br/>Arrive <em>Comfortably</em></h1>
       <p>Premium cab service built for tourists and locals alike. Safe drivers, transparent fares, seamless booking — wherever your journey takes you.</p>
       <div class="hero-actions">
-        <button class="btn-primary" onclick="document.getElementById('book-bar').scrollIntoView({behavior:'smooth'})">🚕 Book Your Ride</button>
+        <button class="btn-primary" onclick="window.location.href='{% url 'book_ride' %}'">🚕 Book Your Ride</button>
         <button class="btn-secondary" onclick="document.getElementById('how-section').scrollIntoView({behavior:'smooth'})">See How It Works</button>
       </div>
       <div class="hero-stats">
@@ -642,8 +684,8 @@
 
   <div class="booking-bar" id="book-bar">
     <div class="booking-inner">
-      <div class="field-group"><label>📍 Pickup Location</label><input type="text" id="bar-pickup" placeholder="Enter pickup address"/></div>
-      <div class="field-group"><label>🏁 Drop Location</label><input type="text" id="bar-drop" placeholder="Enter destination"/></div>
+      <div class="field-group"><label>📍 Pickup Location</label><input type="text" id="bar-pickup" placeholder="Enter pickup address" autocomplete="off"/><div class="ac-dropdown" id="bar-pickup-dd" style="display:none"></div></div>
+      <div class="field-group"><label>🏁 Drop Location</label><input type="text" id="bar-drop" placeholder="Enter destination" autocomplete="off"/><div class="ac-dropdown" id="bar-drop-dd" style="display:none"></div></div>
       <div class="field-group"><label>🗓 Travel Date</label><input type="date" id="bar-date"/></div>
       <button class="book-btn" onclick="handleBookingBarSearch()">Search Cabs →</button>
     </div>
@@ -659,11 +701,6 @@
           <div class="service-icon">🚕</div>
           <h3>City Rides</h3>
           <p>Quick, comfortable rides within the city with metered fare and zero surprises.</p>
-        </div>
-        <div class="service-card" onclick="openBookingModal({title:'Airport Transfer Booking',type:'Airport Transfer'})">
-          <div class="service-icon">✈️</div>
-          <h3>Airport Transfer</h3>
-          <p>On-time pickup and drop to the airport. Flight tracking included.</p>
         </div>
         <div class="service-card" onclick="showCity('chennai')">
           <div class="service-icon">🗺️</div>
@@ -1265,6 +1302,10 @@ function closeAllDrops() {
 document.addEventListener('click', function(e) {
   if (!e.target.closest('.nav-links')) closeAllDrops();
 });
+document.addEventListener('click', function (e) {
+  var menu = document.getElementById('accountMenu');
+  if (menu && !menu.contains(e.target)) menu.classList.remove('open');
+});
 
 // ── PAGE NAVIGATION ──────────────────────────────────────────────────────────
 function showPage(id) {
@@ -1481,11 +1522,54 @@ function handleBookingBarSearch() {
     alert('Please enter your pickup and drop locations.');
     return;
   }
-  openBookingModal({
-    title: 'Cab Search Results',
-    type: 'Oneway Trip',
-  });
+  const params = new URLSearchParams();
+  if (pickup) params.set('pickup', pickup);
+  if (drop) params.set('drop', drop);
+  if (date) params.set('date', date);
+  if (barState.pickup) { params.set('pickup_lat', barState.pickup.lat); params.set('pickup_lon', barState.pickup.lon); }
+  if (barState.drop)   { params.set('drop_lat', barState.drop.lat);     params.set('drop_lon', barState.drop.lon); }
+  window.location.href = "{% url 'book_ride' %}?" + params.toString();
 }
+
+// ── HERO SEARCH BAR: location autocomplete (OpenStreetMap Nominatim) ────────
+const barState = { pickup: null, drop: null };
+let barAcTimers = {};
+function setupBarAutocomplete(inputId, ddId, stateKey) {
+  const input = document.getElementById(inputId);
+  const dd = document.getElementById(ddId);
+  if (!input || !dd) return;
+  input.addEventListener('input', () => {
+    clearTimeout(barAcTimers[inputId]);
+    barState[stateKey] = null;
+    const q = input.value.trim();
+    if (q.length < 3) { dd.style.display = 'none'; return; }
+    barAcTimers[inputId] = setTimeout(async () => {
+      dd.innerHTML = '<div class="ac-loading">Searching…</div>';
+      dd.style.display = 'block';
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&q=${encodeURIComponent(q)}`, { headers: { 'Accept-Language': 'en' } });
+        const data = await res.json();
+        if (!data.length) { dd.innerHTML = '<div class="ac-loading">No results.</div>'; return; }
+        dd.innerHTML = '';
+        data.forEach(p => {
+          const item = document.createElement('div');
+          item.className = 'ac-item';
+          item.textContent = p.display_name;
+          item.addEventListener('mousedown', e => {
+            e.preventDefault();
+            input.value = p.display_name;
+            barState[stateKey] = { lat: parseFloat(p.lat), lon: parseFloat(p.lon), label: p.display_name };
+            dd.style.display = 'none';
+          });
+          dd.appendChild(item);
+        });
+      } catch { dd.innerHTML = '<div class="ac-loading">Search failed.</div>'; }
+    }, 400);
+  });
+  input.addEventListener('blur', () => setTimeout(() => { dd.style.display = 'none'; }, 150));
+}
+setupBarAutocomplete('bar-pickup', 'bar-pickup-dd', 'pickup');
+setupBarAutocomplete('bar-drop', 'bar-drop-dd', 'drop');
 
 function submitTripForm(tripType) {
   alert(`${tripType} request submitted! Our team will call you shortly to confirm.`);

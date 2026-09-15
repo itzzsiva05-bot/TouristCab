@@ -1,0 +1,21 @@
+{% extends "adminpanel/base.html" %}
+{% block title %}Attendance — Admin{% endblock %}
+{% block content %}
+<div class="topbar"><h1>Attendance</h1></div>
+<div class="card">
+  <table>
+    <tr><th>Driver</th><th>Date</th><th>Check-in</th><th>Check-out</th><th>Hours</th></tr>
+    {% for r in records %}
+    <tr>
+      <td>{{ r.driver.name }}</td>
+      <td>{{ r.date }}</td>
+      <td>{{ r.check_in|time:"H:i" }}</td>
+      <td>{% if r.check_out %}{{ r.check_out|time:"H:i" }}{% else %}<span class="badge waiting">Still on duty</span>{% endif %}</td>
+      <td>{{ r.hours_worked }}</td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="5">No attendance records yet.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "adminpanel/base.html" %}
+{% block title %}Dashboard — Admin{% endblock %}
+{% block content %}
+<div class="topbar"><h1>Dashboard</h1></div>
+
+<div class="stat-grid">
+  <div class="stat"><div class="num">{{ stats.total_bookings }}</div><div class="label">Total bookings</div></div>
+  <div class="stat"><div class="num">{{ stats.waiting }}</div><div class="label">Waiting for driver</div></div>
+  <div class="stat"><div class="num">{{ stats.confirmed }}</div><div class="label">On-going rides</div></div>
+  <div class="stat"><div class="num">{{ stats.completed }}</div><div class="label">Completed</div></div>
+  <div class="stat"><div class="num">{{ stats.no_driver }}</div><div class="label">No driver found</div></div>
+  <div class="stat"><div class="num">{{ stats.total_drivers }}</div><div class="label">Total drivers</div></div>
+  <div class="stat"><div class="num">{{ stats.on_duty_drivers }}</div><div class="label">On duty</div></div>
+  <div class="stat"><div class="num">{{ stats.available_drivers }}</div><div class="label">Free right now</div></div>
+</div>
+
+<div class="card">
+  <h2 style="font-family:'Syne',sans-serif;margin-bottom:1rem;">Recent bookings</h2>
+  <table>
+    <tr><th>#</th><th>Customer</th><th>Route</th><th>Driver</th><th>Status</th><th>Fare</th></tr>
+    {% for b in recent_bookings %}
+    <tr>
+      <td>{{ b.id }}</td>
+      <td>{{ b.name }}</td>
+      <td>{{ b.pickup|truncatechars:18 }} → {{ b.drop|truncatechars:18 }}</td>
+      <td>{% if b.driver %}{{ b.driver.name }}{% else %}—{% endif %}</td>
+      <td><span class="badge {{ b.status }}">{{ b.get_status_display }}</span></td>
+      <td>₹{{ b.total_fare }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}

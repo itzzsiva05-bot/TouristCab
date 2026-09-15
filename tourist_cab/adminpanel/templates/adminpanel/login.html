@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Admin Login — TouristCab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:#0D1B2A;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+  .card{background:#fff;border-radius:12px;padding:2.2rem;width:100%;max-width:360px;}
+  .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;color:#0D1B2A;margin-bottom:1.4rem;text-align:center;}
+  .logo span{color:#F4A62A;}
+  .field{margin-bottom:1rem;}
+  .field label{display:block;font-size:.8rem;font-weight:600;color:#1A2E42;margin-bottom:.35rem;}
+  .field input{width:100%;padding:.65rem .8rem;border:1px solid #dfe4ea;border-radius:8px;font-size:.9rem;font-family:inherit;}
+  .btn{width:100%;border:none;border-radius:8px;padding:.7rem;font-weight:700;font-size:.9rem;cursor:pointer;background:#F4A62A;color:#0D1B2A;}
+  .btn:hover{background:#E8920E;}
+  .msg{padding:.6rem .9rem;border-radius:8px;font-size:.82rem;margin-bottom:1rem;background:#fee2e2;color:#b91c1c;}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">Tourist<span>Cab</span> · Admin</div>
+  {% for m in messages %}<div class="msg">{{ m }}</div>{% endfor %}
+  <form method="post">
+    {% csrf_token %}
+    <div class="field"><label>Email</label><input type="email" name="email" required placeholder="Admin@gmail.com"></div>
+    <div class="field"><label>Password</label><input type="password" name="password" required placeholder="••••••••"></div>
+    <button class="btn" type="submit">Login</button>
+  </form>
+</div>
+</body>
+</html>

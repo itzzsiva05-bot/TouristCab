@@ -120,6 +120,16 @@
     .map-info-chip { flex: 1; background: var(--white); border: 1px solid var(--border); border-radius: 7px; padding: .55rem .75rem; text-align: center; }
     .map-info-chip .chip-val { font-size: 1.05rem; font-weight: 700; color: var(--navy); }
     .map-info-chip .chip-lbl { font-size: .72rem; color: var(--muted); margin-top: .1rem; }
+
+    /* ── vehicle selection cards ── */
+    .car-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: .8rem; }
+    .car-card { border: 2px solid var(--border); border-radius: 10px; padding: .9rem .7rem; text-align: center; cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .1s; background: var(--white); }
+    .car-card:hover { border-color: var(--amber); transform: translateY(-1px); }
+    .car-card.selected { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(245,166,35,.18); background: #fffaf0; }
+    .car-card img { width: 100%; height: 56px; object-fit: cover; border-radius: 6px; margin-bottom: .5rem; background: var(--off); }
+    .car-card-icon { width: 100%; height: 56px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; border-radius: 6px; margin-bottom: .5rem; background: var(--off); }
+    .car-card-name { font-size: .85rem; font-weight: 700; color: var(--navy); }
+    .car-card-rate { font-size: .78rem; color: var(--muted); margin-top: .15rem; }
   </style>
 </head>
 <body>
@@ -152,16 +162,6 @@
         <div class="ac-dropdown" id="dropDropdown" style="display:none"></div>
       </div>
 
-      <div class="section-title">Select Car</div>
-      <div class="field">
-        <label for="carSelect">Vehicle type</label>
-        <select id="carSelect" name="car_id" required>
-          <option value="1" data-rate="12">Sedan (₹12/km)</option>
-          <option value="2" data-rate="15">SUV (₹15/km)</option>
-          <option value="3" data-rate="10">Hatchback (₹10/km)</option>
-        </select>
-      </div>
-
       <input type="hidden" name="distance_km" id="distanceInput">
       <input type="hidden" name="pickup_lat"  id="pickupLat">
       <input type="hidden" name="pickup_lon"  id="pickupLon">
@@ -183,11 +183,46 @@
         <div class="field">
           <label for="passengers">Passengers</label>
           <input id="passengers" name="passengers" type="number" min="1" max="10" placeholder="e.g. 2">
+          <small id="passengerHint" style="color:var(--muted);font-size:.78rem;"></small>
         </div>
         <div class="field">
           <label for="luggage">Luggage pieces</label>
           <input id="luggage" name="luggage" type="number" min="0" placeholder="e.g. 1">
         </div>
+      </div>
+
+      <div class="section-title">Select Vehicle</div>
+      <div class="field">
+        <p id="carPlaceholder" style="color:var(--muted);font-size:.88rem;">
+          Enter the number of passengers above to see available vehicles.
+        </p>
+        <div id="noCarMatch" class="banner error" style="margin-bottom:.6rem;"></div>
+        <div class="car-cards" id="carCards" style="display:none;">
+          {% for car in cars %}
+          <div class="car-card" data-id="{{ car.id }}" data-max-pax="{{ car.max_passengers }}" onclick="selectCar('{{ car.id }}')">
+            {% if car.photo %}<img src="{{ car.photo.url }}" alt="{{ car.name }}">
+            {% else %}<div class="car-card-icon">{% if 'bike' in car.name|lower %}🏍️{% else %}🚗{% endif %}</div>{% endif %}
+            <div class="car-card-name">{{ car.name }}</div>
+            <div class="car-card-rate">₹{{ car.rate_per_km }}/km</div>
+          </div>
+          {% empty %}
+          <p style="color:var(--muted);font-size:.9rem;">No vehicles available right now — please check back shortly.</p>
+          {% endfor %}
+        </div>
+        <select id="carSelect" name="car_id" required style="display:none;">
+          {% for car in cars %}
+          <option value="{{ car.id }}" data-rate="{{ car.rate_per_km }}" data-rate2="{{ car.rate_per_km_pax2|default_if_none:'' }}" data-base="{{ car.base_fare }}" data-allowance="{{ car.driver_allowance }}" data-max-pax="{{ car.max_passengers }}">{{ car.name }} (₹{{ car.rate_per_km }}/km)</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="paymentMethod">Payment method</label>
+        <select id="paymentMethod" name="payment_method" required>
+          <option value="cash">Cash</option>
+          <option value="upi">UPI</option>
+          <option value="card">Card</option>
+        </select>
       </div>
 
       <div class="section-title">Your Details</div>
@@ -197,16 +232,16 @@
       </div>
       <div class="field-row">
         <div class="field">
-          <label for="phone">Phone (WhatsApp)</label>
-          <div style="display:flex;gap:.5rem;">
-            <input id="phone" name="phone" type="tel" required placeholder="+91XXXXXXXXXX" style="flex:1;" oninput="resetOtp()">
-            <button type="button" id="sendOtpBtn" class="btn-otp" onclick="sendOTP()">Send OTP</button>
-          </div>
+          <label for="phone">Phone</label>
+          <input id="phone" name="phone" type="tel" required placeholder="+91XXXXXXXXXX">
           <div style="font-size:.75rem;color:var(--muted);margin-top:.3rem;">Enter with country code: +91XXXXXXXXXX</div>
         </div>
         <div class="field">
-          <label for="email">Email (optional)</label>
-          <input id="email" name="email" type="email" placeholder="you@example.com">
+          <label for="email">Email</label>
+          <div style="display:flex;gap:.5rem;">
+            <input id="email" name="email" type="email" required placeholder="you@example.com" style="flex:1;" oninput="resetOtp()">
+            <button type="button" id="sendOtpBtn" class="btn-otp" onclick="sendOTP()">Send OTP</button>
+          </div>
         </div>
       </div>
 
@@ -220,11 +255,11 @@
       </div>
 
       <div id="verifiedBadge" style="display:none;margin-bottom:1rem;background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);padding:.5rem .85rem;border-radius:6px;font-size:.88rem;">
-        ✅ Phone number verified
+        ✅ Email verified
       </div>
 
       <button type="submit" class="btn-submit" id="submitBtn" disabled style="opacity:.5;cursor:not-allowed;">
-        Verify phone to continue →
+        Verify email to continue →
       </button>
     </form>
   </div>
@@ -232,13 +267,18 @@
   <div class="fare-summary">
     <div class="fare-card">
       <h3>Fare Estimate</h3>
-      <div class="fare-row"><span class="label">Distance</span><span id="distanceBadge">— km</span></div>
-      <div class="fare-row"><span class="label">Base charge</span><span>₹80</span></div>
-      <div class="fare-row"><span class="label">Running cost</span><span id="runningCost">₹0</span></div>
-      <div class="fare-row"><span class="label">Driver allowance</span><span>₹50</span></div>
-      <div class="fare-row"><span class="label">Tax (5%)</span><span id="tax">₹0</span></div>
-      <div class="fare-row total"><span class="label">Total</span><span id="total">₹—</span></div>
-      <p class="fare-note">Fare updates once both locations are set.</p>
+      <p id="farePlaceholder" style="color:var(--muted);font-size:.85rem;">
+        Enter passengers and pick a vehicle to see the fare estimate.
+      </p>
+      <div id="fareRows" style="display:none;">
+        <div class="fare-row"><span class="label">Distance</span><span id="distanceBadge">— km</span></div>
+        <div class="fare-row"><span class="label">Base charge</span><span id="baseCharge">₹80</span></div>
+        <div class="fare-row"><span class="label">Running cost</span><span id="runningCost">₹0</span></div>
+        <div class="fare-row"><span class="label">Driver allowance</span><span id="driverAllowance">₹50</span></div>
+        <div class="fare-row"><span class="label">Tax (5%)</span><span id="tax">₹0</span></div>
+        <div class="fare-row total"><span class="label">Total</span><span id="total">₹—</span></div>
+        <p class="fare-note">Fare updates once both locations are set.</p>
+      </div>
     </div>
   </div>
 </div>
@@ -324,7 +364,34 @@
 <script>
 const state = { pickup: { lat: null, lon: null, label: "" }, drop: { lat: null, lon: null, label: "" } };
 let distanceKm = 0, currentFare = {};
-const BASE = 80, DRIVER_ALLOWANCE = 50, TAX_PCT = 0.05;
+let otpVerified = false, otpCountdown = null, otpSeconds = 0;
+const TAX_PCT = 0.05;
+
+/* ── Quietly grab the user's rough location on page load (no error shown if
+   denied) so address search can be biased towards nearby places instead of
+   only matching well-known places worldwide. ── */
+let userGeo = null;
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(
+    pos => { userGeo = { lat: pos.coords.latitude, lon: pos.coords.longitude }; },
+    () => { /* silently ignore — search just falls back to India-wide bias */ },
+    { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 }
+  );
+}
+
+function buildSearchUrl(q) {
+  let url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&countrycodes=in&q=${encodeURIComponent(q)}`;
+  // Soft bias (bounded=0) towards a box around the user/pickup point so genuinely
+  // nearby places rank first, without excluding valid matches further away.
+  const anchor = userGeo || (state.pickup.lat ? state.pickup : null);
+  if (anchor && anchor.lat) {
+    const d = 1.5; // ~150km box, generous enough to still find outstation drops
+    const left   = anchor.lon - d, right = anchor.lon + d;
+    const top    = anchor.lat + d, bottom = anchor.lat - d;
+    url += `&viewbox=${left},${top},${right},${bottom}&bounded=0`;
+  }
+  return url;
+}
 
 let acTimers = {};
 function setupAutocomplete(inputId, dropdownId, stateKey) {
@@ -341,8 +408,15 @@ function setupAutocomplete(inputId, dropdownId, stateKey) {
       dd.innerHTML = '<div class="ac-loading">Searching…</div>';
       dd.style.display = "block";
       try {
-        const res  = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&q=${encodeURIComponent(q)}`, { headers: { "Accept-Language": "en" } });
+        let res  = await fetch(buildSearchUrl(q), { headers: { "Accept-Language": "en" } });
         let data = await res.json();
+        if (!data.length) {
+          // Nothing nearby matched — retry once without the country/viewbox
+          // bias so far-away or unusual place names still show up instead
+          // of silently failing.
+          res  = await fetch(`https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=8&q=${encodeURIComponent(q)}`, { headers: { "Accept-Language": "en" } });
+          data = await res.json();
+        }
         data.sort((a, b) => { const g = ["city","town","village","hamlet","suburb"]; return (g.includes(a.type)?0:1) - (g.includes(b.type)?0:1); });
         if (!data.length) { dd.innerHTML = '<div class="ac-loading">No results.</div>'; return; }
         dd.innerHTML = "";
@@ -406,32 +480,147 @@ async function calculateDistance() {
   document.getElementById("distanceInput").value       = distanceKm.toFixed(2);
   clearError(); updateFare();
 }
+let carAvailable = false;
+
+/* ── Show only the vehicles that can actually seat the entered passengers.
+   Box + fare stay hidden until passengers is filled; if nothing matches,
+   show an error instead of a vehicle box. ── */
+function filterCarsByPassengers() {
+  const pax         = parseInt(document.getElementById("passengers").value) || 0;
+  const placeholder = document.getElementById("carPlaceholder");
+  const noMatch      = document.getElementById("noCarMatch");
+  const carCardsBox  = document.getElementById("carCards");
+  const cards        = document.querySelectorAll(".car-card");
+
+  if (pax <= 0) {
+    carCardsBox.style.display = "none";
+    placeholder.style.display = "block";
+    noMatch.style.display     = "none";
+    carAvailable = false;
+    document.getElementById("passengerHint").textContent = "";
+    setFareVisible(false);
+    updateSubmitState();
+    return;
+  }
+
+  placeholder.style.display = "none";
+
+  let firstFitId = null;
+  cards.forEach(card => {
+    const maxPax = parseInt(card.dataset.maxPax) || 4;
+    const fits   = pax <= maxPax;
+    card.style.display = fits ? "" : "none";
+    if (fits && firstFitId === null) firstFitId = card.dataset.id;
+  });
+
+  if (firstFitId === null) {
+    carCardsBox.style.display = "none";
+    noMatch.style.display     = "block";
+    noMatch.textContent = `No vehicle available for ${pax} passengers. Please reduce the passenger count.`;
+    document.getElementById("passengerHint").textContent = "";
+    document.getElementById("carSelect").value = "";
+    document.querySelectorAll(".car-card").forEach(c => c.classList.remove("selected"));
+    carAvailable = false;
+    setFareVisible(false);
+    updateSubmitState();
+    return;
+  }
+
+  noMatch.style.display     = "none";
+  carCardsBox.style.display = "grid";
+  document.getElementById("passengerHint").textContent =
+    `Showing vehicles that seat ${pax}+ passenger${pax > 1 ? "s" : ""}.`;
+
+  const sel          = document.getElementById("carSelect");
+  const selectedCard = document.querySelector(`.car-card[data-id="${sel.value}"]`);
+  const selectedFits = selectedCard && selectedCard.style.display !== "none";
+
+  if (!selectedFits) {
+    selectCar(firstFitId);
+  } else {
+    carAvailable = true;
+    setFareVisible(true);
+    updateFare();
+    updateSubmitState();
+  }
+}
+
+function setFareVisible(visible) {
+  document.getElementById("fareRows").style.display        = visible ? "block" : "none";
+  document.getElementById("farePlaceholder").style.display = visible ? "none"  : "block";
+}
+
+function updateSubmitState() {
+  const btn = document.getElementById("submitBtn");
+  if (!otpVerified) {
+    btn.disabled = true; btn.style.opacity = ".5"; btn.style.cursor = "not-allowed";
+    btn.textContent = "Verify email to continue →";
+  } else if (!carAvailable) {
+    btn.disabled = true; btn.style.opacity = ".5"; btn.style.cursor = "not-allowed";
+    btn.textContent = "Select passengers & vehicle →";
+  } else {
+    btn.disabled = false; btn.style.opacity = "1"; btn.style.cursor = "pointer";
+    btn.textContent = "Review & Confirm Booking →";
+  }
+}
+
 function updateFare() {
-  const sel     = document.getElementById("carSelect");
-  const rate    = parseFloat(sel.selectedOptions[0]?.dataset.rate) || 12;
-  const running = distanceKm * rate;
-  const subtotal= BASE + running + DRIVER_ALLOWANCE;
-  const tax     = subtotal * TAX_PCT;
-  const total   = subtotal + tax;
+  const sel      = document.getElementById("carSelect");
+  const opt      = sel.selectedOptions[0];
+  const pax      = parseInt(document.getElementById("passengers").value) || 1;
+  const rate1    = parseFloat(opt?.dataset.rate) || 12;
+  const rate2    = parseFloat(opt?.dataset.rate2);
+  const rate     = (pax >= 2 && !isNaN(rate2)) ? rate2 : rate1;
+  const base     = parseFloat(opt?.dataset.base) || 0;
+  const allowance= parseFloat(opt?.dataset.allowance) || 0;
+  const running  = distanceKm * rate;
+  const subtotal = base + running + allowance;
+  const tax      = subtotal * TAX_PCT;
+  const total    = subtotal + tax;
   document.getElementById("runningCost").textContent = "₹"+running.toFixed(0);
+  document.getElementById("baseCharge").textContent  = "₹"+base.toFixed(0);
+  document.getElementById("driverAllowance").textContent = "₹"+allowance.toFixed(0);
   document.getElementById("tax").textContent         = "₹"+tax.toFixed(0);
   document.getElementById("total").textContent       = "₹"+total.toFixed(0);
   currentFare = { rate, running, subtotal, tax, total };
   return currentFare;
 }
-document.getElementById("carSelect").addEventListener("change", updateFare);
+document.getElementById("carSelect").addEventListener("change", () => { updateFare(); });
+document.getElementById("passengers").addEventListener("input", filterCarsByPassengers);
+
+function selectCar(carId) {
+  const sel = document.getElementById("carSelect");
+  sel.value = carId;
+  document.querySelectorAll(".car-card").forEach(c => {
+    c.classList.toggle("selected", c.dataset.id === String(carId));
+  });
+  carAvailable = true;
+  setFareVisible(true);
+  updateFare();
+  updateSubmitState();
+}
+
+filterCarsByPassengers();
 
 /* ── FORM → MODAL (bug fixed: const f declared first) ── */
 document.getElementById("bookingForm").addEventListener("submit", e => {
   e.preventDefault();
   const f = e.target;
 
-  if (!otpVerified) { showError("Phone number verify பண்ணணும் before booking."); return; }
+  if (!otpVerified) { showError("Please verify your email before booking."); return; }
   clearError();
   if (!state.pickup.lat || !state.drop.lat) { showError("Please select pickup and drop-off from the suggestions."); return; }
   if (distanceKm <= 0) { showError("Distance could not be calculated. Re-select locations."); return; }
   if (!f.date.value) { showError("Please select a date."); return; }
   if (!f.time.value) { showError("Please select a time."); return; }
+
+  const selOpt  = document.getElementById("carSelect").selectedOptions[0];
+  const maxPax  = parseInt(selOpt?.dataset.maxPax) || 4;
+  const paxVal  = parseInt(f.passengers.value) || 0;
+  if (paxVal > maxPax) {
+    showError(`${selOpt.text.split(" (")[0]} allows a maximum of ${maxPax} passengers. Please reduce passengers or choose a different vehicle.`);
+    return;
+  }
 
   const fare = updateFare(), car = document.getElementById("carSelect").selectedOptions[0]?.text || "—";
   document.getElementById("modalDetail").innerHTML = `
@@ -467,6 +656,7 @@ async function submitBooking() {
     passengers: f.passengers.value||1, luggage: f.luggage.value||0,
     car_id: document.getElementById("carSelect").value,
     total_fare: fare.total.toFixed(0),
+    payment_method: document.getElementById("paymentMethod").value,
   };
   closeModal();
   try {
@@ -478,8 +668,9 @@ async function submitBooking() {
       showError(data.error || "Booking failed. Please try again.");
       confirmBtn.disabled = false; confirmBtn.textContent = "Yes, book this ride";
     }
-  } catch {
-    showError("Server எட்டல. Network check பண்ணுங்க.");
+  } catch (err) {
+    console.error("submitBooking failed:", err);
+    showError("Server unreachable. Please check your network connection and try again.");
     confirmBtn.disabled = false; confirmBtn.textContent = "Yes, book this ride";
   }
 }
@@ -569,8 +760,11 @@ const PICKUP_ICON = L.divIcon({
 
 function initMap(driverLat, driverLon) {
   if (liveMap) return;
-  liveMap = L.map("liveMap", { zoomControl: true, attributionControl: false });
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(liveMap);
+  liveMap = L.map("liveMap", { zoomControl: true, attributionControl: true });
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+  }).addTo(liveMap);
   driverMarker = L.marker([driverLat, driverLon], { icon: CAR_ICON }).addTo(liveMap).bindPopup("🚖 Your driver");
   const pLat = parseFloat(document.getElementById("pickupLat").value);
   const pLon = parseFloat(document.getElementById("pickupLon").value);
@@ -639,53 +833,85 @@ function stopLiveTracking() {
   if (liveMap) { liveMap.remove(); liveMap = null; driverMarker = null; pickupMarker = null; routeLine = null; }
 }
 
-let otpVerified = false, otpCountdown = null, otpSeconds = 0;
 function resetOtp() {
   otpVerified = false;
   document.getElementById("otpRow").style.display        = "none";
   document.getElementById("verifiedBadge").style.display = "none";
   document.getElementById("otpStatus").textContent       = "";
   document.getElementById("otpInput").value              = "";
-  const btn = document.getElementById("submitBtn");
-  btn.disabled = true; btn.style.opacity = ".5"; btn.style.cursor = "not-allowed";
-  btn.textContent = "Verify phone to continue →";
+  updateSubmitState();
   clearInterval(otpCountdown);
   document.getElementById("otpTimer").textContent = "";
 }
+let otpCooldownTimer = null;
 async function sendOTP() {
-  const phone = document.getElementById("phone").value.trim();
-  if (!phone) { showError("Phone number enter பண்ணுங்க."); return; }
+  const email = document.getElementById("email").value.trim();
+  if (!email || !email.includes("@")) { showError("Please enter a valid email address."); return; }
   const btn = document.getElementById("sendOtpBtn");
+  clearTimeout(otpCooldownTimer);
   btn.disabled = true; btn.textContent = "Sending…";
+
+  // If the server (or its SMTP connection) hangs, don't leave the button
+  // stuck on "Sending…" forever — give up after 20s and let the person retry.
+  const controller = new AbortController();
+  const abortTimer = setTimeout(() => controller.abort(), 20000);
+
   try {
-    const res  = await fetch("/bookings/send-otp/", { method:"POST", headers:{"Content-Type":"application/json","X-CSRFToken":getCsrf()}, body:JSON.stringify({phone}) });
-    const data = await res.json();
+    const res = await fetch("/bookings/send-otp/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-CSRFToken": getCsrf() },
+      body: JSON.stringify({ email }),
+      signal: controller.signal,
+    });
+    clearTimeout(abortTimer);
+
+    let data;
+    try {
+      data = await res.json();
+    } catch {
+      throw new Error(`Server returned an unexpected response (status ${res.status}).`);
+    }
+
     if (data.ok) {
       document.getElementById("otpRow").style.display = "block";
       document.getElementById("otpStatus").style.color = "var(--muted)";
-      document.getElementById("otpStatus").textContent = "OTP sent to " + phone + " via WhatsApp";
+      document.getElementById("otpStatus").textContent = "OTP sent to " + email + " via email";
       startOtpTimer(120);
       btn.textContent = "Resend OTP";
-    } else { showError(data.error || "OTP send பண்ண முடியல."); btn.disabled = false; btn.textContent = "Send OTP"; }
-  } catch { showError("Server எட்டல."); btn.disabled = false; btn.textContent = "Send OTP"; }
-  setTimeout(() => { btn.disabled = false; }, 30000);
+      // Keep it disabled briefly to avoid spamming — re-enable after 30s.
+      otpCooldownTimer = setTimeout(() => { btn.disabled = false; }, 30000);
+    } else {
+      showError(data.error || "Couldn't send the OTP. Please try again.");
+      btn.disabled = false; btn.textContent = "Send OTP";
+    }
+  } catch (err) {
+    clearTimeout(abortTimer);
+    console.error("sendOTP failed:", err);
+    const msg = err.name === "AbortError"
+      ? "Sending the OTP is taking longer than expected. Please try again."
+      : (err.message || "Server unreachable. Please check your network connection and try again.");
+    showError(msg);
+    btn.disabled = false; btn.textContent = "Send OTP";
+  }
 }
 async function verifyOTP() {
-  const phone = document.getElementById("phone").value.trim();
+  const email = document.getElementById("email").value.trim();
   const otp   = document.getElementById("otpInput").value.trim();
-  if (otp.length !== 6) { document.getElementById("otpStatus").style.color="#b91c1c"; document.getElementById("otpStatus").textContent="6-digit OTP enter பண்ணுங்க."; return; }
+  if (otp.length !== 6) { document.getElementById("otpStatus").style.color="#b91c1c"; document.getElementById("otpStatus").textContent="Please enter the 6-digit OTP."; return; }
   try {
-    const res  = await fetch("/bookings/verify-otp/", { method:"POST", headers:{"Content-Type":"application/json","X-CSRFToken":getCsrf()}, body:JSON.stringify({phone,otp}) });
+    const res  = await fetch("/bookings/verify-otp/", { method:"POST", headers:{"Content-Type":"application/json","X-CSRFToken":getCsrf()}, body:JSON.stringify({email,otp}) });
     const data = await res.json();
     if (data.ok) {
       otpVerified = true; clearInterval(otpCountdown);
       document.getElementById("otpRow").style.display        = "none";
       document.getElementById("verifiedBadge").style.display = "block";
-      const btn = document.getElementById("submitBtn");
-      btn.disabled = false; btn.style.opacity = "1"; btn.style.cursor = "pointer";
-      btn.textContent = "Review & Confirm Booking →";
-    } else { document.getElementById("otpStatus").style.color="#b91c1c"; document.getElementById("otpStatus").textContent=data.error||"Wrong OTP."; }
-  } catch { document.getElementById("otpStatus").style.color="#b91c1c"; document.getElementById("otpStatus").textContent="Verification failed."; }
+      updateSubmitState();
+    } else { document.getElementById("otpStatus").style.color="#b91c1c"; document.getElementById("otpStatus").textContent=data.error||"Wrong OTP. Please try again."; }
+  } catch (err) {
+    console.error("verifyOTP failed:", err);
+    document.getElementById("otpStatus").style.color="#b91c1c";
+    document.getElementById("otpStatus").textContent="Verification failed. Please try again.";
+  }
 }
 function startOtpTimer(seconds) {
   clearInterval(otpCountdown); otpSeconds = seconds;
@@ -704,6 +930,30 @@ function clearError() { document.getElementById("errorBanner").style.display="no
 function showSuccess(msg) { const b=document.getElementById("successBanner"); b.textContent=msg; b.style.display="block"; setTimeout(()=>{b.style.display="none";},8000); }
 
 document.getElementById("date").min = new Date().toISOString().split("T")[0];
+
+/* ── Prefill from the home page's hero search bar (?pickup=&drop=&date=&pickup_lat=…) ── */
+(function prefillFromQuery() {
+  const qs = new URLSearchParams(window.location.search);
+  const pickup = qs.get("pickup"), drop = qs.get("drop"), date = qs.get("date");
+  const pLat = qs.get("pickup_lat"), pLon = qs.get("pickup_lon");
+  const dLat = qs.get("drop_lat"),   dLon = qs.get("drop_lon");
+
+  if (pickup) document.getElementById("pickup").value = pickup;
+  if (drop)   document.getElementById("drop").value   = drop;
+  if (date)   document.getElementById("date").value   = date;
+
+  if (pLat && pLon) {
+    state.pickup = { lat: parseFloat(pLat), lon: parseFloat(pLon), label: pickup || "" };
+    document.getElementById("pickupLat").value = pLat;
+    document.getElementById("pickupLon").value = pLon;
+  }
+  if (dLat && dLon) {
+    state.drop = { lat: parseFloat(dLat), lon: parseFloat(dLon), label: drop || "" };
+    document.getElementById("dropLat").value = dLat;
+    document.getElementById("dropLon").value = dLon;
+  }
+  if (state.pickup.lat && state.drop.lat) calculateDistance();
+})();
 </script>
 </body>
 </html>

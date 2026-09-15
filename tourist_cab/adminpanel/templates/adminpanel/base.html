@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>{% block title %}Admin — TouristCab{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --navy:#0D1B2A; --navy2:#1A2E42; --amber:#F4A62A; --amber2:#E8920E;
+    --cream:#F7F3EE; --grey:#8A9BB0; --white:#FFFFFF; --green:#22c55e; --red:#ef4444; --radius:10px;
+  }
+  body{font-family:'Inter',sans-serif;background:var(--cream);color:var(--navy);min-height:100vh;display:flex;}
+  .sidebar{width:220px;background:var(--navy);color:#fff;min-height:100vh;padding:1.5rem 1rem;flex-shrink:0;}
+  .sidebar .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;margin-bottom:2rem;}
+  .sidebar .logo span{color:var(--amber);}
+  .sidebar a{display:block;color:var(--grey);text-decoration:none;padding:.6rem .7rem;border-radius:8px;font-size:.88rem;font-weight:600;margin-bottom:.3rem;}
+  .sidebar a:hover,.sidebar a.active{background:var(--navy2);color:var(--amber);}
+  .content{flex:1;padding:2rem 3%;max-width:1100px;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;}
+  .topbar h1{font-family:'Syne',sans-serif;font-size:1.4rem;}
+  .btn{border:none;border-radius:var(--radius);padding:.55rem 1.1rem;font-weight:700;font-size:.85rem;cursor:pointer;text-decoration:none;display:inline-block;}
+  .btn-amber{background:var(--amber);color:var(--navy);}
+  .btn-amber:hover{background:var(--amber2);}
+  .btn-green{background:var(--green);color:#fff;}
+  .btn-red{background:var(--red);color:#fff;}
+  .btn-outline{background:transparent;border:1px solid var(--navy2);color:var(--navy2);}
+  .btn-sm{padding:.35rem .7rem;font-size:.75rem;}
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:var(--radius);overflow:hidden;}
+  th,td{padding:.65rem .8rem;text-align:left;font-size:.85rem;border-bottom:1px solid #f0f0f0;}
+  th{background:var(--navy2);color:#fff;font-weight:600;}
+  .card{background:#fff;border-radius:var(--radius);padding:1.5rem;box-shadow:0 2px 14px rgba(13,27,42,.06);margin-bottom:1.25rem;}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-bottom:1.5rem;}
+  .stat{background:#fff;border-radius:var(--radius);padding:1.1rem;box-shadow:0 2px 10px rgba(13,27,42,.06);}
+  .stat .num{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--navy2);}
+  .stat .label{font-size:.78rem;color:var(--grey);}
+  .badge{display:inline-block;padding:.2rem .6rem;border-radius:99px;font-size:.72rem;font-weight:700;}
+  .badge.waiting{background:#fef3c7;color:#92400e;}
+  .badge.confirmed{background:#dbeafe;color:#1e40af;}
+  .badge.completed{background:#dcfce7;color:#15803d;}
+  .badge.cancelled,.badge.rejected,.badge.no_driver{background:#fee2e2;color:#b91c1c;}
+  .field{margin-bottom:1rem;max-width:420px;}
+  .field label{display:block;font-size:.8rem;font-weight:600;color:var(--navy2);margin-bottom:.35rem;}
+  .field input,.field select{width:100%;padding:.6rem .8rem;border:1px solid #dfe4ea;border-radius:var(--radius);font-size:.9rem;font-family:inherit;}
+  .msg{padding:.7rem 1rem;border-radius:var(--radius);font-size:.85rem;margin-bottom:1rem;}
+  .msg.success{background:#dcfce7;color:#15803d;}
+  .msg.error{background:#fee2e2;color:#b91c1c;}
+  .msg.info,.msg.warning{background:#fef3c7;color:#92400e;}
+  form.inline{display:inline;}
+  .filters{margin-bottom:1rem;}
+  .filters a{margin-right:.6rem;font-size:.82rem;color:var(--navy2);text-decoration:none;font-weight:600;}
+  .filters a.active{color:var(--amber2);text-decoration:underline;}
+</style>
+</head>
+<body>
+{% if request.user.is_authenticated %}
+<div class="sidebar">
+  <div class="logo">Tourist<span>Cab</span></div>
+  <a href="{% url 'admin_dashboard' %}" class="{% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">📊 Dashboard</a>
+  <a href="{% url 'admin_booking_list' %}" class="{% if 'booking' in request.resolver_match.url_name %}active{% endif %}">🚕 Bookings</a>
+  <a href="{% url 'admin_driver_list' %}" class="{% if 'driver' in request.resolver_match.url_name %}active{% endif %}">👤 Drivers</a>
+  <a href="{% url 'admin_attendance' %}" class="{% if request.resolver_match.url_name == 'admin_attendance' %}active{% endif %}">🕒 Attendance</a>
+  <a href="{% url 'admin_salary' %}" class="{% if request.resolver_match.url_name == 'admin_salary' %}active{% endif %}">💰 Salary</a>
+  <a href="/admin/" target="_blank">⚙️ Django Admin</a>
+  <a href="{% url 'admin_logout' %}" style="margin-top:1.5rem;color:#fca5a5;">🚪 Logout</a>
+</div>
+{% endif %}
+<div class="content">
+  {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+  {% block content %}{% endblock %}
+</div>
+</body>
+</html>

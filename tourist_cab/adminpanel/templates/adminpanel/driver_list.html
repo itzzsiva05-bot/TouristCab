@@ -1,0 +1,37 @@
+{% extends "adminpanel/base.html" %}
+{% block title %}Drivers — Admin{% endblock %}
+{% block content %}
+<div class="topbar">
+  <h1>Drivers</h1>
+  <a class="btn btn-amber" href="{% url 'admin_driver_add' %}">+ Add Driver</a>
+</div>
+
+<div class="card">
+  <table>
+    <tr><th>Name</th><th>Phone</th><th>Email (login)</th><th>Car</th><th>On duty</th><th>Available</th><th>Active</th><th>Rate/ride</th><th></th></tr>
+    {% for d in drivers %}
+    <tr>
+      <td>{{ d.name }}</td>
+      <td>{{ d.phone }}</td>
+      <td>{{ d.email|default:"—" }}</td>
+      <td>{% if d.car %}{{ d.car.name }}{% else %}—{% endif %}</td>
+      <td>{% if d.is_on_duty %}✅{% else %}—{% endif %}</td>
+      <td>{% if d.is_available %}✅{% else %}—{% endif %}</td>
+      <td>{% if d.is_active %}✅{% else %}❌{% endif %}</td>
+      <td>₹{{ d.rate_per_ride }}</td>
+      <td>
+        <a class="btn btn-outline btn-sm" href="{% url 'admin_driver_edit' d.id %}">Edit</a>
+        <form class="inline" method="post" action="{% url 'admin_driver_toggle' d.id %}">
+          {% csrf_token %}
+          <button class="btn btn-sm {% if d.is_active %}btn-red{% else %}btn-green{% endif %}" type="submit">
+            {% if d.is_active %}Deactivate{% else %}Activate{% endif %}
+          </button>
+        </form>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="9">No drivers yet.</td></tr>
+    {% endfor %}
+  </table>
+</div>
+{% endblock %}
